@@ -1,10 +1,9 @@
 # _SBBE Data Analysis_
 
-#### Code repository for analyses concerning SBBE data.
-
-- Please visit the [Wiki page](https://github.com/g-pacheco/Y150239Genomics/wiki) for detailed information on the individual analyses.
-- The [LaTeX](https://en.wikipedia.org/wiki/LaTeX) code used to generate the Supplementary Information PDF of this manuscript is available from [`Y150239Genomics--SI`](https://github.com/g-pacheco/Y150239Genomics/tree/main/Y150239Genomics--SI).
+#### Code repository for analyses concerning *SBBE* data.
 ***
 
-#### Individual of interest (Y150239) photographed in Garderen, The Netherlands.
-![](https://github.com/g-pacheco/sbbe-oficial/blob/main/SBBE_SBBE24--DescriptiveMaps.jpeg)
+##### Illustrative maps depicting the percentage of *SBBE* members and *SBBE24* attendees categorised by the Brazilian regions and states. The orange point indicates where *SBBE24* will be held.
+![](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBE_SBBE24--DescriptiveMaps.jpg)
+
+
