@@ -22,15 +22,15 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read_excel("ListaParticipante_22-08-2024_09-31-38.xlsx") %>%
+fulldf <- read_excel("./Lists/ListaParticipante_22-08-2024_09-31-38.xlsx") %>%
           rename(Sub_Area = `Sub Área`) %>%
           filter(Inscrição == "Aprovado")
-fulldf_descontos <- read_excel("planilha-descontos_sbbe_2024-2version.xlsx")
+fulldf_descontos <- read_excel("./Lists/planilha-descontos_sbbe_2024-2version.xlsx")
 
 
 # Loads SBBE logo ~
-SBBElogo <- readPNG("SBBElogo.png")
-SBBE24logo <- readPNG("SBBE24logo.png")
+SBBElogo <- readPNG("./Logos/SBBElogo.png")
+SBBE24logo <- readPNG("./Logos/SBBE24logo.png")
 
 
 # Renames column ~
@@ -149,14 +149,14 @@ AttendeesSBBE24 <- c("Membro fundador da SBBE - Categoria Graduação - Sem insc
 SBBEFounders <- fulldf %>%
                 filter(str_detect(Categoria, "Membro fundador da SBBE")) %>%
                 select(Nome, "E-mail")
-write_xlsx(SBBEFounders, "SBBEMembers.xlsx")
+write_xlsx(SBBEFounders, "./Lists/SBBEMembers.xlsx")
 
 
 # Gets SBBE24 Attendees ~
 SBBE24Attendees <- fulldf %>%
                    filter(!str_detect(Categoria, "Sem inscrição no SBBE24")) %>%
                    select(Nome, "E-mail")
-write_xlsx(SBBE24Attendees, "SBBE24Attendees.xlsx")
+write_xlsx(SBBE24Attendees, "./Lists/SBBE24Attendees.xlsx")
 
 
 # Corrects certain patterns ~
