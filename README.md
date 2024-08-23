@@ -7,4 +7,4 @@
 ***
 
 #### Individual of interest (Y150239) photographed in Garderen, The Netherlands.
-![](https://github.com/g-pacheco/sbbe-oficial/blob/main/SBBE_SBBE24--DescriptiveMaps.jpeg)
+![](https://github.com/g-pacheco/sbbe-oficial/blob/main/SBBE_SBBE24--DescriptiveMaps.jpg)
