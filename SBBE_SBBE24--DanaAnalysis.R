@@ -22,14 +22,11 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read_excel("./Lists/ListaParticipante_03-09-2024_10-06-16.xlsx") %>%
-          rename(Sub_Area = `Sub Área`)
+fulldf <- read_excel("./Lists/ListaParticipante_03-09-2024_13-23-10.xlsx") %>%
+          rename(Sub_Area = `Sub Área`) %>%
+          filter(Inscrição == "Aprovado")
 fulldf_descontos <- read_excel("./Lists/planilha-descontos_sbbe_2024-2version.xlsx")
 
-
-# Corrects Inscrição ~
-fulldf$Inscrição <- ifelse(fulldf$"Nome Crachá" %in% c("Felipe de Oliveira Torquato"), "Aprovado", fulldf$Inscrição)
-fulldf <- fulldf %>% filter(Inscrição == "Aprovado")
 
 
 # Corrects Nome Crachá ~
@@ -241,19 +238,6 @@ NameCounts <- table(fulldf$Badge)
 
 # Prints repeated entries ~
 NameCounts[NameCounts > 1]
-
-
-# Extracts first name from each full name ~
-fulldf$FirstName <- sapply(strsplit(fulldf$Nome, " "), `[`, 1)
-
-
-# Extracts first name from each full name ~
-matches <- fulldf$FirstName[-nrow(fulldf)] == fulldf$FirstName[-1]
-fulldf$MatchWithNext <- c(matches, FALSE)
-
-
-# Gets consecutive entries ~ 
-fulldf[fulldf$MatchWithNext, ]
 
 
 # Defines entries to exclude ~
@@ -821,7 +805,7 @@ limits_fun <- function(x){
   if (limitVal > 500){
     c(0, 1000)}
   else if (limitVal > 300){
-    c(0, 325)}
+    c(0, 335)}
   else if (limitVal < .2){
     c(0, .22)}
   else if (limitVal < .3){
