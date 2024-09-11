@@ -12,7 +12,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 
 # Loads packages ~
-pacman::p_load(tidyverse, ggstar, ggrepel, readxl, writexl, cowplot, ggpubr, lemon, reshape2, writexl, stringr, lubridate, geobr, ggspatial, showtext, png, extrafont, sf)
+pacman::p_load(tidyverse, ggstar, ggrepel, readxl, writexl, cowplot, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
+               geobr, ggspatial, showtext, png, extrafont, sf)
 
 
 # Loads extra fonts ~
@@ -22,7 +23,7 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read_excel("./Lists/ListaParticipante_05-09-2024_11-12-49.xlsx") %>%
+fulldf <- read_excel("./Lists/ListaParticipante_10-09-2024_14-51-31.xlsx") %>%
           filter(Inscrição == "Aprovado") %>%
           rename(Sub_Area = `Sub Área`)
 fulldf_descontos <- read_excel("./Lists/planilha-descontos_sbbe_2024-2version.xlsx")
@@ -40,6 +41,7 @@ fulldf$"Nome Crachá" <- ifelse(fulldf$Nome %in% c("Fabricio Santos"), "Fabríci
 
 # Corrects Nome Crachá ~
 fulldf$Categoria <- ifelse(fulldf$Nome %in% c("Thomaz Pinotti"), "Mestrando, Doutorando e Pós doutorando", fulldf$Categoria)
+fulldf$UF <- ifelse(fulldf$Nome %in% c("Jeferson Duran Fuentes"), "SP", fulldf$UF)
 
 
 # Loads SBBE logo ~
@@ -130,7 +132,7 @@ levels(fulldf$Instituição <- gsub("UFGD - ", "", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("UNESP - UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - BOTUCATU", "UNIVERSIDADE ESTADUAL PAULISTA", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("UFRJ-", "", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("PPGE/", "", fulldf$Instituição))
-levels(fulldf$Instituição <- gsub("UNICENTRO - UNIVERSIDADE ESTADUAL DO CENTRO OESTE / Guarapuava", "UNIVERSIDADE ESTADUAL DO CENTRO-OESTE", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNICENTRO - UNIVERSIDADE ESTADUAL DO CENTRO OESTE / Guarapuava", "UNIVERSIDADE ESTADUAL DO CENTRO-OESTE do Paraná", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("IMBIV", "Argentina", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("Botânica", "", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("FUNDAÇÃO ", "", fulldf$Instituição))
@@ -144,6 +146,7 @@ levels(fulldf$Instituição <- gsub("NUPEM-UFRJ Instituto de Biodiversidade e Su
 levels(fulldf$Instituição <- gsub("Unicamp -Universidade Estadual de Campinas IB", "Universidade Estadual de Campinas", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("IB -", "", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("INSTITUTO DE FILOSOFIA E CIENCIAS HUMANAS - IFCH DA Universidade Federal do Rio Grande do Sul - ", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Fiocruz Paraná", "Instituto Carlos Chagas — Fiocruz Paraná", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("Instituto Carlos Chagas, Fiocruz-PR", "Instituto Carlos Chagas — Fiocruz Paraná", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("UNESP/BAURU", "Universidade Estadual Paulista", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("UESB - ", "", fulldf$Instituição))
@@ -153,6 +156,55 @@ levels(fulldf$Instituição <- gsub("UNESP/Botucatu", "Universidade Estadual Pau
 levels(fulldf$Instituição <- gsub("Unicamp -Universidade Estadual de Campinas \\(IB\\)", "Universidade Estadual de Campinas", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub(" - UNIVERSIDADE FEDERAL DE SANTA CATARINA e UNIR", "", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("University of Ottawa", "University of Ottawa \\(Canadá\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub(" Instituto de Biologia - ", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("NUPEM-UFRJ Instituto de Biodiversidade e Sustentabilidade NUPEM/UFRJ -", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("IFPR - INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA DO PARANÁ - campus Londrina", "INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA DO PARANÁ", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Instituto de Biociências da", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("NUPEM-UFRJ", "Universidade Federal do Rio de Janeiro", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("PEA/", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Universidade Federal de Santa Catarina -", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub(" - UEPG", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UnB", "Universidade de Brasília", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFMT-CUIABÁ", "Universidade Federal de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFG - UNIVERSIDADE FEDERAL DE GOIÁS- REGIONAL GOIÂNIA", "UNIVERSIDADE FEDERAL DE GOIÁS", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("PUCPR/MHNCI", "Pontifícia Universidade Católica do Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFPE/Universidade de São Paulo", "Universidade Federal de Pernambuco", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFRJ/Universidade de São Paulo", "Universidade Federal do Rio de Janeiro", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Ufscar -Universidade Federal de São Carlos;UNIFRAN - UNIVERSIDADE DE FRANCA", "Universidade Federal de São Carlos", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFV-Universidade Federal de Viçosa", "Universidade Federal de Viçosa", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNEMAT -Universidade do Estado de Mato Grosso - Nova Xavantina", "Universidade do Estado de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNESP -Universidade Estadual Paulista - FCAV, Câmpus Jaboticabal", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNESP - Bauru", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNESP CLP", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Unesp Rio Claro", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Unesp Rio Claro IB", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNESP, São Vicente", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNESP", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Universidade Estadual Paulista IB", "Universidade Estadual Paulista", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("unifesp", "Universidade Federal de São Paulo", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNIVERSIDAD NACIONAL DE CORDOBA", "Universidad Nacional de Córdoba \\(Argentina\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNIVASF \\(campos de Senhor do Bonfim \\)", "Universidade Federal do Vale do São Francisco", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UniSãoJosé - Centro Universitário São José", "UniSãoJosé", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNISA -Universidade Santo Amaro", "Universidade Santo Amaro", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNINGÁ - Centro Universitário Ingá", "UNINGÁ", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNICENTRO -Universidade Estadual do Centro-Oeste", "Universidade Estadual do Centro-Oeste do Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNICENTRO - UNIVERSIDADE ESTADUAL DO CENTRO OESTE DO PARANÁ", "Universidade Estadual do Centro-Oeste do Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNIVERSIDADE ESTADUAL DO CENTRO OESTE", "Universidade Estadual do Centro-Oeste do Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub(" JÚLIO DE MESQUITA FILHO", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("- UNOESTE", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Universidade Estadual do Centro-Oeste \\(UNICENTRO\\) - PR", "Universidade Estadual do Centro-Oeste do Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub(" - Faculdade de Ciências de Bauru", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("EMBRAPA - Empresa Brasileira de Pesquisa Agropecuária - Embrapa Soja", "Empresa Brasileira de Pesquisa Agropecuária", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Instituto de Biodiversidade e Sustentabilidade - NUPEM", "Universidade Federal do Rio de Janeiro", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("MN/Museu Nacional /Universidade Federal Do Rio De Janeiro", "Universidade Federal do Rio de Janeiro", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("FCEyN - Universidad de Buenos Aires", "Universidad de Buenos Aires \\(Argentina\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UEPB -Universidade Estadual da Paraíba Campus V", "Universidade Estadual da Paraíba", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNEMAT -Universidade do Estado de Mato Grosso - Campus de Nova Xavantina-MT", "Universidade do Estado de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNEMAT-Universidade do Estado de Mato Grosso-Campus Nova Xavantina", "Universidade do Estado de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UFMT", "Universidade Federal de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("IFIBYNE-UBA-CONICET", "Universidad de Buenos Aires \\(Argentina\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Instituto de BiociênciasUniversidade de São Paulo", "Universidade de São Paulo", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNEMAT", "Universidade do Estado de Mato Grosso", fulldf$Instituição))
 
 
 # Corrects UF ~
@@ -189,7 +241,7 @@ fulldf$Instituição <- ifelse(fulldf$"Nome Crachá" %in% c("Santiago Vieyra"), 
 
 
 # Corrects UF ~
-fulldf$UF <- ifelse(fulldf$UF %in% c(NA, "Aberdeen City", "california", "Florida", "Misiones", "Texas", "Córdoba", "Provincia de Buenos Aires", "Ontario"), "Estrangeiro", fulldf$UF)
+fulldf$UF <- ifelse(fulldf$UF %in% c(NA, "Aberdeen City", "california", "Florida", "Misiones", "Texas", "Córdoba", "Provincia de Buenos Aires", "Ontario", "Capital Federal"), "Estrangeiro", fulldf$UF)
 
 
 # Corrects Gender ~
@@ -252,7 +304,7 @@ NameCounts[NameCounts > 1]
 
 
 # Defines entries to exclude ~
-RowsToKeep <- !(grepl("carlos guerra schrago|fabricius domingos|fabrício r. santos", fulldf$Badge) & fulldf$Categoria == "Profissional")
+RowsToKeep <- !(grepl("carlos guerra schrago|fabricius domingos|fabrício r. santos|iris hass", fulldf$Badge) & fulldf$Categoria == "Profissional")
 
 
 # Excludes repeated entries ~
@@ -260,7 +312,7 @@ fulldf <- fulldf[RowsToKeep, ]
 
 
 # Corrects Categoria for repeated entries  ~
-fulldf$Categoria <- ifelse(fulldf$Badge %in% c("carlos guerra schrago", "fabricius domingos", "fabrício r. santos"), "Profissional + Membro fundador da SBBE", fulldf$Categoria)
+fulldf$Categoria <- ifelse(fulldf$Badge %in% c("carlos guerra schrago", "fabricius domingos", "fabrício r. santos", "iris hass"), "Profissional + Membro fundador da SBBE", fulldf$Categoria)
 
 
 # Expands fulldf by creating Region ~
@@ -333,33 +385,42 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "University of Copenhagen (Dinamarca)",
                      "Instituto de Biología Subtropical (Argentina)",
                      "Instituto Multidisciplinario de Biología Vegetal (Argentina)",
+                     "Universidad Nacional de Córdoba (Argentina)",
+                     "Universidad de Buenos Aires (Argentina)",
                      "Universidade Federal de Santa Maria",
                      "Universidade Federal do Rio Grande",
                      "Universidade Federal de Pelotas",
+                     "Universidade Federal de Ciências da Saúde de Porto Alegre",
                      "Universidade Federal do Rio Grande do Sul",
                      "Pontifícia Universidade Católica do Rio Grande do Sul",
                      "Universidade Federal da Integração Latino-Americana",
                      "Universidade Estadual de Maringá",
                      "Centro Universitário Claretiano",
+                     "Uningá",
                      "Instituto Carlos Chagas — Fiocruz Paraná",
                      "Universidade Estadual de Ponta Grossa",
-                     "Universidade Estadual do Centro-Oeste",
+                     "Universidade Estadual do Centro-Oeste do Paraná",
                      "Secretaria de Educação do Estado do Paraná",
+                     "Instituto Federal de Educação, Ciência E Tecnologia do Paraná",
                      "Universidade Tecnológica Federal do Paraná",
                      "Pontifícia Universidade Católica do Paraná",
                      "Universidade Federal do Paraná",
                      "Hospital Regional Hans Dieter Schmidt",
+                     "Centro Universitário Leonardo da Vinci",
+                     "Universidade da Região de Joinville",
                      "Universidade Federal de Santa Catarina",
+                     "Universidade do Vale do Paraíba",
                      "Instituto Butantan",
                      "Universidade do Vale do Itajaí",
+                     "Universidade Santo Amaro",
                      "Universidade do Oeste Paulista",
                      "Universidade Federal de São Carlos",
                      "Universidade Federal do ABC",
                      "Universidade Federal de São Paulo",
                      "Universidade de São Paulo",
-                     "Universidade Estadual Paulista Júlio de Mesquita Filho",
                      "Universidade Estadual de Campinas",
                      "Universidade Estadual Paulista",
+                     "Unisãojosé",
                      "Universidade Estadual do Norte Fluminense Darcy Ribeiro",
                      "Instituto Oswaldo Cruz",
                      "Universidade Federal do Rio de Janeiro",
@@ -376,23 +437,30 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Universidade Federal de Viçosa", 
                      "Universidade Federal de São João Del-Rei",
                      "Universidade Federal de Jataí",
+                     "Empresa Brasileira de Pesquisa Agropecuária",
                      "Universidade de Brasília",
                      "Universidade Federal de Goiás",
                      "Universidade Estadual de Goiás",
+                     "Universidade do Estado de Mato Grosso",
                      "Universidade Federal de Mato Grosso",
                      "Universidade Federal de Mato Grosso do Sul",
                      "Universidade Federal da Grande Dourados",
+                     "Universidade Estadual de Santa Cruz",
                      "Universidade Federal da Bahia",
+                     "Universidade Estadual de Feira de Santana",
                      "Universidade Federal do Recôncavo da Bahia",
                      "Universidade Estadual do Sudoeste da Bahia",
                      "Universidade Federal de Sergipe",
                      "Universidade Federal de Alagoas",
                      "Universidade Federal do Vale do São Francisco",
                      "Instituto Aggeu Magalhães — Fiocruz Pernambuco",
+                     "Instituto Federal de Educação, Ciência E Tecnologia de Pernambuco",
                      "Universidade Federal de Pernambuco",
+                     "Universidade Estadual da Paraíba",
                      "Universidade Federal da Paraíba",
                      "Universidade Federal do Rio Grande do Norte",
                      "Museu Paraense Emílio Goeldi",
+                     "Universidade Federal do Pará",
                      "Instituto Nacional de Pesquisas da Amazônia",
                      "Universidade Federal do Amazonas",
                      "Outro",
@@ -452,7 +520,7 @@ setdiff(fulldf$Instituição, variable_levels)
 setdiff(fulldf$Sub_Area, variable_levels)
 
 
-# Defines the event date ~# Defines Instituiçãothe event date ~
+# Defines the event date ~
 target_date <- as.Date("2024-11-20")
 
 
@@ -464,8 +532,8 @@ fulldf_Descriptive <- fulldf %>%
             "Inscritos no SBBE24" = n_distinct(ID[AttendeesSBBE24_flag]),
             "Instituições representadas na SBBE" = n_distinct(Instituição[MembersSBBE_flag]), 
             "Instituições representadas no SBBE24" = n_distinct(Instituição[AttendeesSBBE24_flag]), 
-            "Seguidores no Instagram" = 949, 
-            "Seguidores no X" = 186,
+            "Seguidores no Instagram" = 1003, 
+            "Seguidores no X" = 188,
             "Dias até o SBBE24" = as.numeric(difftime(target_date, current_date, units = "days")),
             Stats = "General") %>%
   gather(key = "Variable", value = "Percentage", -Stats) %>%
@@ -790,10 +858,10 @@ breaks_fun <- function(y){
   caseVal <- max(y)
   if (caseVal < 1){
     seq(.1, .9, by = .1)}
-  else if (caseVal > 800){
-    seq(50, 1000, by = 100)}
+  else if (caseVal > 1000){
+    seq(50, 1010, by = 100)}
   else { 
-    seq(50, 250, by = 50)}}
+    seq(50, 650, by = 50)}}
 
 
 # Custom y-axis labels ~
@@ -805,10 +873,10 @@ labels_fun <- function(z) {
          scales::label_number(accuracy = 1)(z),
          #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
          #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
-         scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
-         scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
-         scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
-         scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
+         #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
+         #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
+         #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
+         #scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
          scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
          scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
          scales::label_percent(accuracy = 1, scale = 1 * 100, big.mark = "")(z),
@@ -820,10 +888,10 @@ labels_fun <- function(z) {
 # Custom y-axis limits ~
 limits_fun <- function(x){
   limitVal <- max(x)
-  if (limitVal > 500){
-    c(0, 1000)}
-  else if (limitVal > 300){
-    c(0, 400)}
+  if (limitVal > 1000){
+    c(0, 1010)}
+  else if (limitVal > 600){
+    c(0, 630)}
   else if (limitVal < .2){
     c(0, .22)}
   else if (limitVal < .3){
@@ -853,7 +921,8 @@ Panel <-
 ggplot() +
   geom_bar(data = fulldfUp, aes(x = as.factor(Variable), y = Percentage, fill = BarFill),
            colour = "#000000", linewidth = .3, stat = "identity", position = "dodge") +
-  geom_text(data = subset(fulldfUp, Stats == "GeneralNumbers" | Stats == "SocialMedia"), aes(x = as.factor(Variable), y = Percentage, label = Percentage),
+  geom_text(data = subset(fulldfUp, Stats == "GeneralNumbers" | Stats == "SocialMedia"), aes(x = as.factor(Variable), y = Percentage,
+            label = ifelse(Percentage > 1000, sprintf("%.3f", Percentage / 1000), Percentage)),
             position = position_dodge(width = .9), family = "cormorant", size = 5.5, fontface = "bold", hjust = 1.75) +
   labs(title = "Sociedade Brasileira de Biologia Evolutiva (SBBE)",
        subtitle = "I Congresso Brasileiro de Biologia Evolutiva (SBBE24)",
@@ -893,7 +962,7 @@ PanelUp <- ggdraw(Panel) +
 
 # Saves panel ~
 ggsave(PanelUp, file = "SBBE_SBBE24--DescriptivePanel.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 32, height = 50, dpi = 600)
+       device = cairo_pdf, scale = 1, width = 32, height = 62, dpi = 600)
 
 
 # Load geom data ~
@@ -1063,9 +1132,9 @@ Panel <-
                    nudge_x = 3.6, nudge_y = -1, segment.size = 0, segment.color = NA, 
                    size = 4.5, label.size = .1, family = "cormorant", fill = "#FF7B00", colour = "#000000") +
   scale_fill_continuous(low = "#d6d6d6", high = "#004529",
-                        breaks = c(10, 20, 30, 40),
-                        labels = c("10%", "20%", "30%", "40%"),
-                        limits = c(0, 50)) +
+                        breaks = c(10, 20, 30, 40, 50),
+                        labels = c("10%", "20%", "30%", "40%", "50%"),
+                        limits = c(0, 60)) +
   facet_grid(Division ~ Stats, labeller = labeller(Stats = ylabel)) +
   annotation_scale(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members"),
                    text_family = "cormorant", location = "bl", line_width = 1.25, text_cex = 1, style = "ticks",
