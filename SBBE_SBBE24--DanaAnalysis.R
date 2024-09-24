@@ -23,10 +23,29 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read_excel("./Lists/ListaParticipante_10-09-2024_14-51-31.xlsx") %>%
-          filter(Inscrição == "Aprovado") %>%
-          rename(Sub_Area = `Sub Área`)
+extra <- read_excel("./Lists/SBBE24_InscriçõesExtraordinárias_R.xlsx")
+normal <- read_excel("./Lists/ListaParticipante_21-09-2024_11-40-42.xlsx") %>%
+  filter(Inscrição == "Aprovado") %>%
+  filter(Categoria != "Curso Galaxy - Apenas para inscritos no congresso") %>%
+  filter(!ID %in% extra$ID) %>%
+  rename(Sub_Area = `Sub Área`)
 fulldf_descontos <- read_excel("./Lists/planilha-descontos_sbbe_2024-2version.xlsx")
+
+
+# Merges data frames ~
+fulldf <- rbind(extra, normal)
+
+
+NoCuritiba <- fulldf %>%
+              filter(str_detect(Categoria, "Graduação")) %>%
+              filter(!str_detect(Categoria, "Sem inscrição no CBBE")) %>%
+              filter(Cidade != "Curitiba")
+
+
+Curitiba <- fulldf %>%
+            filter(str_detect(Categoria, "Graduação")) %>%
+            filter(!str_detect(Categoria, "Sem inscrição no CBBE")) %>%
+            filter(Cidade == "Curitiba")
 
 
 # Corrects Nome Crachá ~
@@ -205,11 +224,26 @@ levels(fulldf$Instituição <- gsub("UFMT", "Universidade Federal de Mato Grosso
 levels(fulldf$Instituição <- gsub("IFIBYNE-UBA-CONICET", "Universidad de Buenos Aires \\(Argentina\\)", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("Instituto de BiociênciasUniversidade de São Paulo", "Universidade de São Paulo", fulldf$Instituição))
 levels(fulldf$Instituição <- gsub("UNEMAT", "Universidade do Estado de Mato Grosso", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("ICC Fiocruz", "Instituto Carlos Chagas — Fiocruz Paraná", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Universidade Federal do Rio Grande do Sul -Universidade Federal do Rio Grande do Sul e UERJ -Universidade do Estado do Rio de Janeiro", "Universidade Federal do Rio Grande do Sul", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("UNT - Universidad Nacional de Trujillo", "Universidad Nacional de Trujillo \\(Argentina\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("CONICET-UNaM Universidad Nacional de Misiones, Argentina", "Universidad Nacional de Misiones \\(Argentina\\)", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("Instituto de biociências -", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub(" - Instituto Oswaldo Cruz", "", fulldf$Instituição))
+levels(fulldf$Instituição <- gsub("TAMU - Texas A&M University", "Texas A&M University \\(EUA\\)", fulldf$Instituição))
 
 
 # Corrects UF ~
 levels(fulldf$UF <- gsub("Rio Grande do Sul", "RS", fulldf$UF))
 levels(fulldf$UF <- gsub("Goias", "GO", fulldf$UF))
+levels(fulldf$UF <- gsub("Iowa", "SP", fulldf$UF))
+
+
+# Corrects UF speakers ~
+fulldf$UF <- ifelse(fulldf$ID %in% c("12821302"), "RS",
+             ifelse(fulldf$ID %in% c("9314289"), "PR",
+             ifelse(fulldf$ID %in% c("9176759"), "SP",
+             ifelse(fulldf$ID %in% c("16590615"), "MG", fulldf$UF))))
 
 
 # Corrects UF speakers ~
@@ -241,7 +275,7 @@ fulldf$Instituição <- ifelse(fulldf$"Nome Crachá" %in% c("Santiago Vieyra"), 
 
 
 # Corrects UF ~
-fulldf$UF <- ifelse(fulldf$UF %in% c(NA, "Aberdeen City", "california", "Florida", "Misiones", "Texas", "Córdoba", "Provincia de Buenos Aires", "Ontario", "Capital Federal"), "Estrangeiro", fulldf$UF)
+fulldf$UF <- ifelse(fulldf$UF %in% c(NA, "Aberdeen City", "california", "Florida", "Misiones", "Texas", "Córdoba", "Provincia de Buenos Aires", "Ontario", "Capital Federal", "La Libertad"), "Estrangeiro", fulldf$UF)
 
 
 # Corrects Gender ~
@@ -252,6 +286,9 @@ fulldf$Gênero <- ifelse(fulldf$Gênero %in% c("M"), "Masculino",
 
 # Corrects Category ~
 levels(fulldf$Categoria <- sub("CBBE", "SBBE24", fulldf$Categoria))
+
+
+table(fulldf$Categoria)
 
 
 MembersSBBE <- c("Estudante de Graduação + Membro fundador da SBBE",
@@ -265,20 +302,6 @@ MembersSBBE <- c("Estudante de Graduação + Membro fundador da SBBE",
 AttendeesSBBE24 <- c("Membro fundador da SBBE - Categoria Graduação - Sem inscrição no SBBE24",
                      "Membro fundador da SBBE - Categoria Pós-Graduação e Pós-doutorado - Sem inscrição no SBBE24",
                      "Membro fundador da SBBE - Categoria Profissional - Sem inscrição no SBBE24")
-
-
-# Gets SBBE Founders ~
-SBBEFounders <- fulldf %>%
-                filter(str_detect(Categoria, "Membro fundador da SBBE")) %>%
-                select(Nome, "E-mail")
-write_xlsx(SBBEFounders, "./Lists/SBBEMembers.xlsx")
-
-
-# Gets SBBE24 Attendees ~
-SBBE24Attendees <- fulldf %>%
-                   filter(!str_detect(Categoria, "Sem inscrição no SBBE24")) %>%
-                   select(Nome, "E-mail")
-write_xlsx(SBBE24Attendees, "./Lists/SBBE24Attendees.xlsx")
 
 
 # Corrects certain patterns ~
@@ -305,6 +328,7 @@ NameCounts[NameCounts > 1]
 
 # Defines entries to exclude ~
 RowsToKeep <- !(grepl("carlos guerra schrago|fabricius domingos|fabrício r. santos|iris hass", fulldf$Badge) & fulldf$Categoria == "Profissional")
+RowsToKeep <- !(grepl("lucca fanti", fulldf$Badge) & fulldf$Categoria == "Estudante de Graduação")
 
 
 # Excludes repeated entries ~
@@ -313,6 +337,7 @@ fulldf <- fulldf[RowsToKeep, ]
 
 # Corrects Categoria for repeated entries  ~
 fulldf$Categoria <- ifelse(fulldf$Badge %in% c("carlos guerra schrago", "fabricius domingos", "fabrício r. santos", "iris hass"), "Profissional + Membro fundador da SBBE", fulldf$Categoria)
+fulldf$Categoria <- ifelse(fulldf$Badge %in% c("lucca fanti"), "Estudante de Graduação + Membro fundador da SBBE", fulldf$Categoria)
 
 
 # Expands fulldf by creating Region ~
@@ -377,12 +402,15 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "University of Ottawa (Canadá)",
                      "Pennsylvania State University (EUA)",
                      "University of Texas (EUA)",
+                     "Texas A&M University (EUA)",
                      "University of California — Los Angeles (EUA)",
                      "Rice University (EUA)",
                      "University of West Florida (EUA)",
                      "Universidade de Aberdeen (Escócia)",
                      "University of Oslo (Noruega)",
                      "University of Copenhagen (Dinamarca)",
+                     "Universidad Nacional de Misiones (Argentina)",
+                     "Universidad Nacional de Trujillo (Argentina)",
                      "Instituto de Biología Subtropical (Argentina)",
                      "Instituto Multidisciplinario de Biología Vegetal (Argentina)",
                      "Universidad Nacional de Córdoba (Argentina)",
@@ -514,6 +542,10 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
 # Gets current date ~
 current_date <- Sys.Date()
 
+  
+# Corrects  ~
+fulldf$Instituição <- ifelse(str_detect(fulldf$Nome, "Fabricio Santos"), "Universidade Federal de Minas Gerais", fulldf$Instituição)
+
 
 # Checks missing Institution ~
 setdiff(fulldf$Instituição, variable_levels)
@@ -532,7 +564,7 @@ fulldf_Descriptive <- fulldf %>%
             "Inscritos no SBBE24" = n_distinct(ID[AttendeesSBBE24_flag]),
             "Instituições representadas na SBBE" = n_distinct(Instituição[MembersSBBE_flag]), 
             "Instituições representadas no SBBE24" = n_distinct(Instituição[AttendeesSBBE24_flag]), 
-            "Seguidores no Instagram" = 1003, 
+            "Seguidores no Instagram" = 1042, 
             "Seguidores no X" = 188,
             "Dias até o SBBE24" = as.numeric(difftime(target_date, current_date, units = "days")),
             Stats = "General") %>%
@@ -555,6 +587,28 @@ fulldf_GeneralNumbers <- fulldf_Descriptive %>%
                          filter(!Variable %in% c("Seguidores no Instagram", "Seguidores no X")) %>%
                          mutate(Stats = "GeneralNumbers") %>%
                          mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+
+
+Matheus <- fulldf %>%
+           filter(str_detect(Categoria, "Graduação|Mestrando, Doutorando e Pós doutorando")) %>%
+           filter(!str_detect(Categoria, "Sem inscrição no CBBE")) %>%
+           filter(Region %in% c("Norte", "Nordeste", "Centro-Oeste"))
+
+
+# Converts DateOfBirth to date ~
+fulldf$DateOfBirth <- dmy(fulldf$"Data de nascimento")
+
+
+# Expands fulldf by creating the Age column ~ 
+fulldf$Age <- floor(interval(fulldf$DateOfBirth, target_date) / years(1))
+
+
+# Calculates ages ~ 
+fulldf$Age <- floor(interval(fulldf$DateOfBirth, target_date) / years(1))
+
+
+# Checks whether there is anyone below 18 ~ 
+any(fulldf$Age < 18)
 
 
 # Gets percentage for Institution ~
@@ -777,6 +831,20 @@ fulldf_descontos_RegionSupportPerc <- fulldf_descontos %>%
   mutate(Stats = "RegionSupport")
 
 
+# Gets SBBE Founders ~
+SBBEFounders <- fulldf %>%
+  filter(str_detect(Categoria, "Membro fundador da SBBE")) %>%
+  select(Nome, "E-mail")
+write_xlsx(SBBEFounders, "./Lists/SBBEMembers.xlsx")
+
+
+# Gets SBBE24 Attendees ~
+SBBE24Attendees <- fulldf %>%
+  filter(!str_detect(Categoria, "Sem inscrição no SBBE24")) %>%
+  select(Nome, "E-mail")
+write_xlsx(SBBE24Attendees, "./Lists/SBBE24Attendees.xlsx")
+
+
 # Combine the data frames ~  
 fulldfUp <- bind_rows(fulldf_GeneralNumbers,
                       fulldf_SocialMedia,
@@ -859,7 +927,7 @@ breaks_fun <- function(y){
   if (caseVal < 1){
     seq(.1, .9, by = .1)}
   else if (caseVal > 1000){
-    seq(50, 1010, by = 100)}
+    seq(50, 1000, by = 100)}
   else { 
     seq(50, 650, by = 50)}}
 
@@ -889,9 +957,9 @@ labels_fun <- function(z) {
 limits_fun <- function(x){
   limitVal <- max(x)
   if (limitVal > 1000){
-    c(0, 1010)}
+    c(0, 1050)}
   else if (limitVal > 600){
-    c(0, 630)}
+    c(0, 640)}
   else if (limitVal < .2){
     c(0, .22)}
   else if (limitVal < .3){
@@ -1124,9 +1192,9 @@ Panel <-
   geom_label(data = subset(fulldf_map,  Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
              aes(x = Longitude, y = Latitude, label = Region),
              size = 4.5, label.size = .1, family = "cormorant", fill = "#f7fbff", colour = "#000000") +
-  #geom_label(data = subset(fulldf_map,  Division == "Per State" & Stats == "Members" & Variable == "SP"),
-  #           aes(x = Longitude.SP, y = Latitude.SP, label = Variable),
-  #           size = 4.5, label.size = .1, family = "cormorant", fill = "#f7fbff", colour = "#000000") +
+  geom_label(data = subset(fulldf_map,  Division == "Per State" & Stats == "Members" & Variable == "SP"),
+             aes(x = Longitude.SP, y = Latitude.SP, label = Variable),
+             size = 4.5, label.size = .1, family = "cormorant", fill = "#f7fbff", colour = "#000000") +
   geom_label_repel(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
                    aes(x = Longitude, y = Latitude, label = Region), point.padding = 0,
                    nudge_x = 3.6, nudge_y = -1, segment.size = 0, segment.color = NA, 
