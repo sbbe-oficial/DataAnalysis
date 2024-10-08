@@ -24,7 +24,7 @@ showtext_auto()
 
 # Loads data ~
 extra <- read_excel("./Lists/SBBE24_InscriçõesExtraordinárias_R.xlsx")
-normal <- read_excel("./Lists/ListaParticipante_21-09-2024_11-40-42.xlsx") %>%
+normal <- read_excel("./Lists/ListaParticipante_25-09-2024_09-48-48.xlsx") %>%
   filter(Inscrição == "Aprovado") %>%
   filter(Categoria != "Curso Galaxy - Apenas para inscritos no congresso") %>%
   filter(!ID %in% extra$ID) %>%
@@ -34,7 +34,7 @@ fulldf_descontos <- read_excel("./Lists/planilha-descontos_sbbe_2024-2version.xl
 
 # Merges data frames ~
 fulldf <- rbind(extra, normal)
-
+ 
 
 NoCuritiba <- fulldf %>%
               filter(str_detect(Categoria, "Graduação")) %>%
@@ -838,6 +838,13 @@ SBBEFounders <- fulldf %>%
 write_xlsx(SBBEFounders, "./Lists/SBBEMembers.xlsx")
 
 
+# Gets SBBE Founders ~
+SBBEFoundersLocalCommittee <- fulldf %>%
+                              filter(str_detect(Categoria, "Membro fundador da SBBE")) %>%
+                              select(Nome, "E-mail")
+write_xlsx(SBBEFoundersLocalCommittee, "./Lists/SBBEMembersLocalCommittee.xlsx")
+
+
 # Gets SBBE24 Attendees ~
 SBBE24Attendees <- fulldf %>%
   filter(!str_detect(Categoria, "Sem inscrição no SBBE24")) %>%
@@ -877,48 +884,73 @@ fulldfUp$BarFill <- ifelse(str_detect(fulldfUp$Stats, "Members"), "#006837",
 # Reorders Population ~
 fulldfUp$Stats <- factor(fulldfUp$Stats, ordered = T,
                             levels = c("GeneralNumbers",
-                                       "SocialMedia",
-                                       "StageMembers",
-                                       "StageAttendees",
-                                       "RegionMembers",
-                                       "RegionAttendees",
-                                       "GenderMembers",
-                                       "GenderAttendees",
-                                       "InstitutionMembers",
-                                       "InstitutionAttendees",
-                                       "AreaMembers",
-                                       "AreaAttendees",
-                                       "SubAreaMembers",
-                                       "SubAreaAttendees",
-                                       "GenderSupport",
-                                       "Ethnicity",
-                                       "Diversity",
-                                       "PCD",
-                                       "Nationality",
-                                       "RegionSupport"))
+                                       "SocialMedia"))
+                                       #"StageMembers"
+                                       #"StageAttendees",
+                                       #"RegionMembers",
+                                       #"RegionAttendees",
+                                       #"GenderMembers",
+                                       #"GenderAttendees",
+                                       #"InstitutionMembers",
+                                       #"InstitutionAttendees",
+                                       #"AreaMembers",
+                                       #"AreaAttendees",
+                                       #"SubAreaMembers",
+                                       #"SubAreaAttendees",
+                                       #"GenderSupport",
+                                       #"Ethnicity",
+                                       #"Diversity",
+                                       #"PCD",
+                                       #"Nationality",
+                                       #"RegionSupport"))
 
 # Sets custom x-axis labels ~
 ylabel <- c("GeneralNumbers" = "Números Gerais",
-            "SocialMedia" = "Mídias Sociais",
-            "StageMembers" = "Percentagem de Afiliados por Estágio Acadêmico",
-            "StageAttendees" = "Percentagem de Inscritos por Estágio Acadêmico",
-            "RegionMembers" = "Percentagem de Afiliados por Região de Atuação",
-            "RegionAttendees" = "Percentagem de Inscritos por Região de Atuação",
-            "GenderMembers" = "Percentagem de Afiliados por Gênero",
-            "GenderAttendees" = "Percentagem de Inscritos por Gênero",
-            "InstitutionMembers" = "Percentagem de Afiliados por Instituição",
-            "InstitutionAttendees" = "Percentagem de Inscritos por Instituição",
-            "AreaMembers" = "Percentagem de Afiliados por Área",
-            "AreaAttendees" = "Percentagem de Inscritos por Área",
-            "SubAreaMembers" = "Percentagem de Afiliados por Sub-Área",
-            "SubAreaAttendees" = "Percentagem de Inscritos por Sub-Área",
+            "SocialMedia" = "Mídias Sociais")
+            #"StageMembers" = "Percentagem de Afiliados por Estágio Acadêmico",
+            #"StageAttendees" = "Percentagem de Inscritos por Estágio Acadêmico",
+            #"RegionMembers" = "Percentagem de Afiliados por Região de Atuação",
+            #"RegionAttendees" = "Percentagem de Inscritos por Região de Atuação",
+            #"GenderMembers" = "Percentagem de Afiliados por Gênero",
+            #"GenderAttendees" = "Percentagem de Inscritos por Gênero",
+            #"InstitutionMembers" = "Percentagem de Afiliados por Instituição",
+            #"InstitutionAttendees" = "Percentagem de Inscritos por Instituição",
+            #"AreaMembers" = "Percentagem de Afiliados por Área",
+            #"AreaAttendees" = "Percentagem de Inscritos por Área",
+            #"SubAreaMembers" = "Percentagem de Afiliados por Sub-Área",
+            #"SubAreaAttendees" = "Percentagem de Inscritos por Sub-Área",
             #"Category" = "Percentagem de Inscritos e/ou Membros por Categoria",
-            "GenderSupport" = "Percentagem de Solicitantes de Apoio por Gênero",
-            "Ethnicity"= "Percentagem de Solicitantes de Apoio por Etnicidade", 
-            "Diversity" = "Percentagem de Solicitantes da Comunidade LGBTQIAP+",
-            "PCD" = "Percentagem de Solicitantes com Deficiência",
-            "Nationality" = "Percentagem de Solicitantes Brasileiros",
-            "RegionSupport" = "Percentagem de Solicitantes por Região de Atuação")
+            #"GenderSupport" = "Percentagem de Solicitantes de Apoio por Gênero",
+            #"Ethnicity"= "Percentagem de Solicitantes de Apoio por Etnicidade", 
+            #"Diversity" = "Percentagem de Solicitantes da Comunidade LGBTQIAP+",
+            #"PCD" = "Percentagem de Solicitantes com Deficiência",
+            #"Nationality" = "Percentagem de Solicitantes Brasileiros",
+            #"RegionSupport" = "Percentagem de Solicitantes por Região de Atuação")
+
+
+
+abstracts <- read_excel("./Lists/ListaResultado_25-09-2024_09-49-14.xlsx")
+
+
+# Step 1: Split the "Autores" column by ", " into a list, and expand it within the same df
+abstracts <- abstracts %>%
+  filter(Situação != "Não Aprovado") %>%
+  mutate(Authors = strsplit(Autores, ",")) %>%
+  unnest_wider(Authors, names_sep = "_") %>%
+  select(Número, Título, "Área Temática", Authors_1) %>%
+  rename(Nome = Authors_1)
+
+
+# Step: Join the two data frames
+abstracts <- abstracts %>%
+  left_join(fulldf %>% select(Nome, Stage), by = "Nome")
+
+# Step: Join the two data frames
+abstracts <- abstracts %>%
+  left_join(fulldf %>% select(Nome, Stage), by = "Nome")
+
+table(abstracts$Stage)
+table(abstracts$"Área Temática")
 
 
 # Custom y-axis breaks ~
@@ -1029,8 +1061,10 @@ PanelUp <- ggdraw(Panel) +
 
 
 # Saves panel ~
-ggsave(PanelUp, file = "SBBE_SBBE24--DescriptivePanel.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 32, height = 62, dpi = 600)
+#ggsave(PanelUp, file = "SBBE_SBBE24--DescriptivePanel.pdf", limitsize = FALSE,
+#       device = cairo_pdf, scale = 1, width = 32, height = 62, dpi = 600)
+ggsave(PanelUp, file = "SBBE_SBBE24--DescriptivePanel_CEES.pdf", limitsize = FALSE,
+       device = cairo_pdf, scale = 1, width = 32, height = 16, dpi = 600)
 
 
 # Load geom data ~
@@ -1170,8 +1204,10 @@ fulldf_map$Division <- factor(fulldf_map$Division, ordered = T,
 
 
 # Sets custom x-axis labels ~
-ylabel <- c("Members" = "% of SBBE Members",
-            "Attendees" = "% of SBBE24 Attendees")
+ylabel_PT <- c("Members" = "% de Membros Fundadores da SBBE",
+               "Attendees" = "% de Participantes no SBBE24")
+ylabel_EN <- c("Members" = "% of SBBE Members",
+               "Attendees" = "% of SBBE24 Attendees")
 
 
 # Creates panel ~
@@ -1203,11 +1239,11 @@ Panel <-
                         breaks = c(10, 20, 30, 40, 50),
                         labels = c("10%", "20%", "30%", "40%", "50%"),
                         limits = c(0, 60)) +
-  facet_grid(Division ~ Stats, labeller = labeller(Stats = ylabel)) +
-  annotation_scale(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members"),
+  facet_grid(Division ~ Stats, labeller = labeller(Stats = ylabel_EN)) +
+  annotation_scale(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"),
                    text_family = "cormorant", location = "bl", line_width = 1.25, text_cex = 1, style = "ticks",
                    pad_x = unit(.2, "in"), pad_y = unit(.2, "in")) +
-  annotation_north_arrow(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members"), 
+  annotation_north_arrow(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"), 
                          location = "bl", which_north = "true", style = north_arrow_fancy_orienteering,
                          pad_x = unit(.2, "in"), pad_y = unit(.3, "in")) +
   theme(legend.position = "right",
@@ -1229,8 +1265,10 @@ Panel <-
 
 
 # Saves panel ~
-ggsave(Panel, file = "SBBE_SBBE24--DescriptiveMaps.pdf", limitsize = FALSE,
+ggsave(Panel, file = "SBBE_SBBE24--DescriptiveMaps_EN.pdf", limitsize = FALSE,
        device = cairo_pdf, scale = 1, width = 15, height = 12, dpi = 600)
+ggsave(Panel, file = "SBBE_SBBE24--DescriptiveMaps_EN.png",
+       scale = 1, width = 15, height = 12, dpi = 600)
 
 
 #
