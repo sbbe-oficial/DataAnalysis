@@ -13,7 +13,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Loads packages ~
 pacman::p_load(tidyverse, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
-               geobr, ggspatial, showtext, png, extrafont, sf, ggiraphExtra)
+               geobr, ggspatial, showtext, png, extrafont, sf, ggiraphExtra, fontawesome, shiny, DT,
+               rvest, stringr, purrr, tibble, dplyr, extrafont, emojifont)
 
 
 # Loads extra fonts ~
@@ -27,10 +28,14 @@ showtext_auto()
 fulldf <- read.csv("SBBEmembers_28mar25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
+# Corrects Institution for better visualisation ~
+levels(fulldf$Institution <- gsub("Universidade|Universidad|University", "Uni.", fulldf$Institution))
+
+
 # Gets Stage ~
 fulldf$Stage <- ifelse(grepl("Profissional", fulldf$Labels), "Profissional",
-                ifelse(grepl("Pós-Graduação", fulldf$Labels), "Pós-graduação",
-                ifelse(grepl("Graduação", fulldf$Labels), "Graduação", NA)))
+                ifelse(grepl("Pos-Graduacao", fulldf$Labels), "Pós-graduação",
+                ifelse(grepl("Graduacao", fulldf$Labels), "Graduação", NA)))
 
 
 # Expands fulldf by creating Region ~
@@ -79,113 +84,113 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "GO", "MT", "MS", "DF",
                      "ES", "MG", "RJ", "SP",
                      "PR", "RS", "SC",
-                     "Graduação",
-                     "Pós-graduação",
                      "Profissional",
+                     "Pós-graduação",
+                     "Graduação",
                      "Dias até o SBBE24",
                      "Seguidores no Bluesky",
                      "Seguidores no X",
                      "Seguidores no Instagram",
                      "Instituições representadas na SBBE",
                      "Afiliados à SBBE",
-                     "University of Ottawa (Canadá)",
-                     "Pennsylvania State University (EUA)",
-                     "University of Texas (EUA)",
-                     "Texas A&M University (EUA)",
-                     "University of California — Los Angeles (EUA)",
-                     "Rice University (EUA)",
-                     "University of West Florida (EUA)",
-                     "University of Aberdeen (Escócia)",
-                     "University of Oslo (Noruega)",
-                     "University of Copenhagen (Dinamarca)",
-                     "Universidad Nacional de Misiones (Argentina)",
-                     "Universidad Nacional de Trujillo (Argentina)",
+                     "Uni. of Ottawa (Canadá)",
+                     "Pennsylvania State Uni. (EUA)",
+                     "Uni. of Texas (EUA)",
+                     "Texas A&M Uni. (EUA)",
+                     "Uni. of California — Los Angeles (EUA)",
+                     "Rice Uni. (EUA)",
+                     "Uni. of West Florida (EUA)",
+                     "Uni. of Aberdeen (Escócia)",
+                     "Uni. of Oslo (Noruega)",
+                     "Uni. of Copenhagen (Dinamarca)",
+                     "Uni. Nacional de Misiones (Argentina)",
+                     "Uni. Nacional de Trujillo (Argentina)",
                      "Instituto de Biología Subtropical (Argentina)",
                      "Instituto Multidisciplinario de Biología Vegetal (Argentina)",
-                     "Universidad Nacional de Córdoba (Argentina)",
-                     "Universidad de Buenos Aires (Argentina)",
-                     "Universidade Federal de Santa Maria",
-                     "Universidade Federal do Rio Grande",
-                     "Universidade Federal de Pelotas",
-                     "Universidade Federal de Ciências da Saúde de Porto Alegre",
-                     "Universidade Federal do Rio Grande do Sul",
-                     "Pontifícia Universidade Católica do Rio Grande do Sul",
-                     "Universidade Federal da Integração Latino-Americana",
-                     "Universidade Estadual de Maringá",
+                     "Uni. Nacional de Córdoba (Argentina)",
+                     "Uni. de Buenos Aires (Argentina)",
+                     "Uni. Federal de Santa Maria",
+                     "Uni. Federal do Rio Grande",
+                     "Uni. Federal de Pelotas",
+                     "Uni. Federal de Ciências da Saúde de Porto Alegre",
+                     "Uni. Federal do Rio Grande do Sul",
+                     "Pontifícia Uni. Católica do Rio Grande do Sul",
+                     "Uni. Federal da Integração Latino-Americana",
+                     "Uni. Estadual de Maringá",
                      "Centro Universitário Claretiano",
                      "Uningá",
                      "Museu de História Natural Capão da Imbuia",
                      "Instituto Carlos Chagas — Fiocruz Paraná",
-                     "Universidade Estadual de Ponta Grossa",
-                     "Universidade Estadual do Centro-Oeste do Paraná",
+                     "Uni. Estadual de Ponta Grossa",
+                     "Uni. Estadual do Centro-Oeste do Paraná",
                      "Secretaria de Educação do Estado do Paraná",
                      "Instituto Federal — Paraná",
-                     "Universidade Tecnológica Federal do Paraná",
-                     "Pontifícia Universidade Católica do Paraná",
-                     "Universidade Federal do Paraná",
+                     "Uni. Tecnológica Federal do Paraná",
+                     "Pontifícia Uni. Católica do Paraná",
+                     "Uni. Federal do Paraná",
                      "Hospital Regional Hans Dieter Schmidt",
                      "Centro Universitário Leonardo da Vinci",
-                     "Universidade da Região de Joinville",
-                     "Universidade Federal de Santa Catarina",
-                     "Universidade do Vale do Paraíba",
+                     "Uni. da Região de Joinville",
+                     "Uni. Federal de Santa Catarina",
+                     "Uni. do Vale do Paraíba",
                      "Instituto Butantan",
-                     "Universidade do Vale do Itajaí",
-                     "Universidade Santo Amaro",
-                     "Universidade do Oeste Paulista",
-                     "Universidade de Mogi Das Cruzes",
-                     "Universidade Federal de São Carlos",
-                     "Universidade Federal do ABC",
-                     "Universidade Federal de São Paulo",
-                     "Universidade de São Paulo",
-                     "Universidade Estadual de Campinas",
-                     "Universidade Estadual Paulista",
+                     "Uni. do Vale do Itajaí",
+                     "Uni. Santo Amaro",
+                     "Uni. do Oeste Paulista",
+                     "Uni. de Mogi Das Cruzes",
+                     "Uni. Federal de São Carlos",
+                     "Uni. Federal do ABC",
+                     "Uni. Federal de São Paulo",
+                     "Uni. de São Paulo",
+                     "Uni. Estadual de Campinas",
+                     "Uni. Estadual Paulista",
                      "Unisãojosé",
-                     "Universidade Estadual do Norte Fluminense Darcy Ribeiro",
+                     "Uni. Estadual do Norte Fluminense Darcy Ribeiro",
                      "Instituto Oswaldo Cruz",
-                     "Universidade Federal do Rio de Janeiro",
-                     "Universidade do Estado do Rio de Janeiro",
-                     "Universidade Federal do Espírito Santo",
+                     "Uni. Federal do Rio de Janeiro",
+                     "Uni. do Estado do Rio de Janeiro",
+                     "Uni. Federal do Espírito Santo",
                      "Instituto Nacional da Mata Atlântica",
-                     "Pontifícia Universidade Católica de Minas Gerais",
-                     "Universidade Federal de Uberlândia", 
-                     "Universidade Federal do Triângulo Mineiro",
-                     "Universidade Federal de Juiz de Fora",
-                     "Universidade do Estado de Minas Gerais",
-                     "Universidade Federal de Minas Gerais",
-                     "Universidade Federal de Lavras",
-                     "Universidade Federal de Viçosa", 
-                     "Universidade Federal de São João Del-Rei",
-                     "Universidade Federal de Jataí",
+                     "Pontifícia Uni. Católica de Minas Gerais",
+                     "Uni. Federal de Uberlândia", 
+                     "Uni. Federal do Triângulo Mineiro",
+                     "Uni. Federal de Juiz de Fora",
+                     "Uni. do Estado de Minas Gerais",
+                     "Uni. Federal de Minas Gerais",
+                     "Uni. Federal de Lavras",
+                     "Uni. Federal de Viçosa", 
+                     "Uni. Federal de São João Del-Rei",
+                     "Uni. Federal de Jataí",
                      "Empresa Brasileira de Pesquisa Agropecuária",
-                     "Universidade de Brasília",
-                     "Universidade Federal de Goiás",
-                     "Universidade Estadual de Goiás",
-                     "Universidade do Estado de Mato Grosso",
-                     "Universidade Federal de Mato Grosso",
-                     "Universidade Federal de Mato Grosso do Sul",
-                     "Universidade Federal da Grande Dourados",
-                     "Universidade Estadual de Santa Cruz",
-                     "Universidade Federal da Bahia",
-                     "Universidade Estadual de Feira de Santana",
-                     "Universidade Federal do Recôncavo da Bahia",
-                     "Universidade Estadual do Sudoeste da Bahia",
-                     "Universidade Federal de Sergipe",
-                     "Universidade Federal de Alagoas",
-                     "Universidade Federal do Vale do São Francisco",
-                     "Universidade de Pernambuco",
+                     "Uni. de Brasília",
+                     "Uni. Federal de Goiás",
+                     "Uni. Estadual de Goiás",
+                     "Uni. do Estado de Mato Grosso",
+                     "Uni. Federal de Mato Grosso",
+                     "Uni. Federal de Mato Grosso do Sul",
+                     "Uni. Federal da Grande Dourados",
+                     "Uni. Estadual de Santa Cruz",
+                     "Uni. Federal da Bahia",
+                     "Uni. Estadual de Feira de Santana",
+                     "Uni. Federal do Recôncavo da Bahia",
+                     "Uni. Estadual do Sudoeste da Bahia",
+                     "Uni. Federal de Sergipe",
+                     "Uni. Federal de Alagoas",
+                     "Uni. Federal do Vale do São Francisco",
+                     "Uni. de Pernambuco",
                      "Instituto Aggeu Magalhães — Fiocruz Pernambuco",
                      "Instituto Federal — Pernambuco",
-                     "Universidade Federal de Pernambuco",
-                     "Universidade Estadual da Paraíba",
-                     "Universidade Federal da Paraíba",
-                     "Universidade Federal do Rio Grande do Norte",
+                     "Uni. Federal de Pernambuco",
+                     "Uni. Estadual da Paraíba",
+                     "Uni. Federal da Paraíba",
+                     "Uni. Federal do Rio Grande do Norte",
                      "Museu Paraense Emílio Goeldi",
-                     "Universidade Federal do Pará",
+                     "Uni. Federal do Pará",
                      "Instituto Nacional de Pesquisas da Amazônia",
-                     "Universidade Federal do Amazonas",
-                     "Outro",
-                     "Masculino",
+                     "Uni. Federal do Amazonas",
                      "Feminino",
+                     "Masculino",
+                     "Outro",
                      "Exterior",
                      "Sul", 
                      "Sudeste",
@@ -318,7 +323,7 @@ BRL_States <- add_row(BRL_States, abbrev_state = "Abroad", name_region = "Abroad
 
 # Creates a data frame with the centroids of the Brazilian regions ~
 BRL_Regions_Centroids_df <- data.frame(Region = c("North", "Northeast", "Central-West", "Southeast", "South", "SBBE24", "Abroad", "SP"),
-                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.2, -49.271111, -65, -48.62),
+                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.4, -49.271111, -65, -48.62),
                                        Latitude = c(-3.5, -8, -15.5, -20, -27.5, -25.429722, -25, -21.9))
 
 
@@ -437,7 +442,7 @@ ylabel_EN <- c("Members" = "% of SBBE Members",
 
 
 # Creates the Circular data frame ~
-Circular <- subset(fulldfUp, Stats == "InstitutionMembers" & Region != "Error") %>% arrange(desc(Percentage))
+Circular <- subset(fulldfUp, Stats == "InstitutionMembers") %>% arrange(desc(Percentage))
 
 
 # Reorders Population ~
@@ -452,7 +457,7 @@ Circular$Region <- factor(Circular$Region, ordered = TRUE,
 
 # Set a number of 'empty bar' to add at the end of each group
 empty_bar <- 2
-to_add <- data.frame( matrix(NA, empty_bar * nlevels(Circular$Region), ncol(Circular)) )
+to_add <- data.frame(matrix(NA, empty_bar * nlevels(Circular$Region), ncol(Circular)))
 colnames(to_add) <- colnames(Circular)
 to_add$Region <- rep(levels(Circular$Region), each = empty_bar)
 Circular <- rbind(Circular, to_add)
@@ -461,15 +466,15 @@ Circular$ID <- seq(1, nrow(Circular))
 
 
 # Get the name and the y position of each label
-label_data <- Circular
-number_of_bar <- nrow(label_data)
-angle <- 90 - 360 * (label_data$ID - .5) / number_of_bar
-label_data$hjust <- ifelse(angle < -90, 1, 0)
-label_data$angle <- ifelse(angle < -90, angle+180, angle)
+label_data_Circular <- Circular
+number_of_bar <- nrow(label_data_Circular)
+angle <- 90 - 360 * (label_data_Circular$ID - .5) / number_of_bar
+label_data_Circular$hjust <- ifelse(angle < -90, 1, 0)
+label_data_Circular$angle <- ifelse(angle < -90, angle + 180, angle)
 
 
 # Prepares a data frame for base lines ~
-base_data <- Circular %>% 
+base_data_Circular <- Circular %>% 
   group_by(Region) %>% 
   summarize(start = min(ID), 
             end = max(ID) - empty_bar, 
@@ -479,10 +484,10 @@ base_data <- Circular %>%
 
 
 # Prepares a data frame for grid ~
-grid_data <- base_data
-grid_data$end <- grid_data$end[ c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
-grid_data$start <- grid_data$start - 1
-grid_data <- grid_data[-1, ]
+grid_data_Circular <- base_data_Circular
+grid_data_Circular$end <- grid_data_Circular$end[ c( nrow(grid_data_Circular), 1:nrow(grid_data_Circular) -1)] + 1
+grid_data_Circular$start <- grid_data_Circular$start - 1
+grid_data_Circular <- grid_data_Circular[-1, ]
 
 
 # Reorders Population ~
@@ -496,12 +501,12 @@ fulldf_map$name_region <- factor(fulldf_map$name_region, ordered = TRUE,
 
 
 # Creates panel ~
-SmallMap <-
+MiniMap <-
   ggplot() +
   geom_sf(data = subset(fulldf_map, name_region != "SBBE24"), aes(fill = name_region), colour = "#f7fbff") +
   geom_star(data = subset(fulldf_map, Division == "Per Region" & Region == "Abroad"),
             aes(x = Longitude, y = Latitude, fill = name_region), size = 26, starshape = 8, starstroke = .3, colour = "#f7fbff") +
-  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#e78ac3")) +
+  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
   geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
                   aes(x = Longitude, y = Latitude, label = Region_PT),
                   family = "Cormorant", size = 5.25, colour = "#ffffff") +
@@ -520,7 +525,7 @@ SmallMap <-
 
 
 # Convert map plot into a grob
-SmallMap_Grob <- ggplotGrob(SmallMap)
+MiniMap_Grob <- ggplotGrob(MiniMap)
 
 
 max_height <- max(Circular$Percentage, na.rm = TRUE) * 100 + 3
@@ -530,38 +535,139 @@ max_height <- max(Circular$Percentage, na.rm = TRUE) * 100 + 3
 Institution_Plot <-
  ggplot(Circular, aes(x = as.factor(ID), y = Percentage * 100, fill = Region)) +
  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = 1) +
-  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#e78ac3"), na.translate = FALSE) +
-  geom_segment(data = grid_data, aes(x = end, y = 5, xend = start, yend = 5), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data, aes(x = end, y = 15, xend = start, yend = 15), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data, aes(x = end, y = 20, xend = start, yend = 20), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7"), na.translate = FALSE) +
+  geom_segment(data = grid_data_Circular, aes(x = end, y = 5, xend = start, yend = 5), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Circular, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Circular, aes(x = end, y = 15, xend = start, yend = 15), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Circular, aes(x = end, y = 20, xend = start, yend = 20), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
   annotate("text", x = rep(max(Circular$ID), 4), y = c(5, 10, 15, 20), label = c("5%", "10%", "15%", "20%"), family = "Cormorant", size = 4, fontface = "bold", color = "#737373", angle = 0, hjust = 1) +
   geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
   ylim(-100, 80) +
-  theme(panel.background = element_rect(fill = "#ffffff"),
+  theme(panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
         panel.grid = element_blank(),
         panel.border = element_blank(),
-        plot.margin = unit(c(-5.8, -4, -4, -4), "cm"),
+        plot.margin = unit(c(-5.8, -4, -4, -3), "cm"),
         legend.position = "none",
         axis.text = element_blank(),
         axis.title = element_blank(), 
         axis.ticks = element_blank()) +
   coord_polar() + 
   #geom_text(data = label_data, aes(x = ID, y = max_height, label = Variable, hjust = hjust), family = "Barlow", size = 3.5, color = "#000000", fontface = "bold", alpha = .6, angle = label_data$angle, inherit.aes = FALSE ) +
-  geom_text(data = label_data, aes(x = ID, y = Percentage * 100 + 6, label = Variable, hjust = hjust), family = "Cormorant", size = 4, color = "#737373", fontface = "bold", angle = label_data$angle, inherit.aes = FALSE ) +
-  geom_segment(data = base_data, aes(x = start, y = -5, xend = end, yend = -5), colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
+  geom_text(data = label_data_Circular, aes(x = ID, y = Percentage * 100 + 6, label = Variable, hjust = hjust), family = "Cormorant", size = 5, color = "#737373", fontface = "bold", angle = label_data_Circular$angle, inherit.aes = FALSE ) +
+  geom_segment(data = base_data_Circular, aes(x = start, y = -5, xend = end, yend = -5), colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
  
 
-Oi <- ggdraw() +
-      draw_plot(Institution_Plot) + 
-      draw_plot(SmallMap, x = .3, y = .33, width = 0.4, height = 0.4)
+# Overlays plots ~
+Institution_Plot <- ggdraw() +
+                    draw_plot(Institution_Plot) + 
+                    draw_plot(MiniMap, x = .31, y = .33, width = .4, height = .4)
       
       
-
-# Saves plot ~
-ggsave(Oi, file = "SBBE_InstitutionMap.pdf", limitsize = FALSE,
+# Saves Institution plot ~
+ggsave(Institution_Plot, file = "Institution_Plot_B.pdf", limitsize = FALSE,
        device = cairo_pdf, scale = 1, width = 15, height = 14, dpi = 600)
 
+
+Gender <- fulldfUp %>% 
+  filter(Stats == "GenderMembers" | Stats == "StageMembers") %>%
+  droplevels() %>%
+  arrange(desc(Percentage))
+
+empty_bar <- 6
+to_add <- data.frame(matrix(NA, empty_bar * nlevels(Gender$Stats), ncol(Gender)))
+colnames(to_add) <- colnames(Gender)
+to_add$Stats <- rep(levels(Gender$Stats), each = empty_bar)
+Gender <- rbind(Gender, to_add)
+Gender <- Gender %>% arrange(Stats)
+Gender$ID <- seq(1, nrow(Gender))
+
+label_data_Gender <- Gender
+number_of_bar <- nrow(label_data_Gender)
+angle <- 90 - 360 * (label_data_Gender$ID - .5) / number_of_bar
+label_data_Gender$hjust <- ifelse(angle < -90, 1, 0)
+label_data_Gender$angle <- ifelse(angle < -90, angle + 180, angle)
+
+base_data_Gender <- Gender %>% 
+  group_by(Stats) %>% 
+  summarize(start = min(ID), 
+            end = max(ID) - empty_bar, 
+            N = n(), .groups = "drop") %>%
+  mutate(end = ifelse(N == 1, start + 1, end)) %>%
+  mutate(title = (start + end) / 2)
+
+grid_data_Gender <- base_data_Gender
+grid_data_Gender$end <- grid_data_Gender$end[ c( nrow(grid_data_Gender), 1:nrow(grid_data_Gender) -1)] + 1
+grid_data_Gender$start <- grid_data_Gender$start - 1
+grid_data_Gender <- grid_data_Gender[-1, ]
+
+
+# Create a data frame with swapped x, y positions for icons and labels
+data <- data.frame(x = c(.2, .6), y = c(.36, .725), label = fontawesome(c("fa-group", "fa-graduation-cap")))
+text_data <- data.frame(x = c(.2, .6), y = c(.17, .55), label = c("Gênero", "Estágio Acadêmico"))
+
+
+Icons <-
+  ggplot(data, aes(x, y, color = label, label = label)) +
+  geom_text(family = "fontawesome-webfont", size = 30) +
+  geom_text(data = text_data, aes(x, y, label = label), family = "Cormorant", size = 6, fontface = "bold", color = "#000000") +
+  scale_colour_manual(values = c("#fdbf6f", "#e5d8bd"), na.translate = FALSE) +
+  scale_x_continuous("",
+                     limits = c(0, 1),
+                     expand = c(0, 0)) +
+  scale_y_continuous("",
+                     limits = c(0, 1),
+                     expand = c(0, 0)) +
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.border = element_blank(),
+        panel.grid = element_blank(),
+        plot.margin = margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank())
+
+
+# Generates plot ~
+Gender_Plot <-
+  ggplot(Gender, aes(x = as.factor(ID), y = Percentage * 100, fill = Stats)) +
+  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Stats), stat = "identity", alpha = 1) +
+  geom_segment(data = grid_data_Gender, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Gender, aes(x = end, y = 20, xend = start, yend = 20), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Gender, aes(x = end, y = 30, xend = start, yend = 30), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Gender, aes(x = end, y = 40, xend = start, yend = 40), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  geom_segment(data = grid_data_Gender, aes(x = end, y = 50, xend = start, yend = 50), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
+  annotate("text", x = rep(max(Gender$ID), 5), y = c(10, 20, 30, 40, 50), label = c("10%", "20%", "30%", "40%", "50%"), family = "Cormorant", size = 4, fontface = "bold", color = "#737373", angle = 0, hjust = 1) +
+  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
+  scale_fill_manual(values = c("#e5d8bd", "#fdbf6f"), na.translate = FALSE) +
+  ylim(-90, 70) +
+  theme(panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),
+        plot.margin = unit(c(-2, -2, -2, -7), "cm"),
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(), 
+        axis.ticks = element_blank()) +
+  coord_polar() +
+  geom_text(data = label_data_Gender, aes(x = ID, y = Percentage * 100 + 6, label = Variable, hjust = hjust), family = "Cormorant", size = 5, color = "#737373", fontface = "bold", angle = label_data_Gender$angle, inherit.aes = FALSE ) +
+  geom_segment(data = base_data_Gender, aes(x = start, y = -5, xend = end, yend = -5), colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
+
+
+# Overlays plots ~
+Gender_PlotUp <- ggdraw() +
+                 draw_plot(Gender_Plot) + 
+                 draw_plot(Icons, x = .27, y = .31, width = .4, height = .4)
+
+
+Final_Plot <- plot_grid(Institution_Plot, Gender_PlotUp, ncol = 2, rel_widths = c(.5, .5))
+
+
+# Saves Institution plot ~
+ggsave(Final_Plot, file = "Layka.pdf", limitsize = FALSE,
+       device = cairo_pdf, scale = 1, width = 30, height = 14, dpi = 600)
 
 
 # Creates panel ~
@@ -615,12 +721,9 @@ Map <-
                                 draw.ulim = TRUE, draw.llim = TRUE))
 
 
-# Saves panel ~
-ggsave(Panel, file = "Layka.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 17, height = 12, dpi = 600)
+
 ggsave(Panel, file = "SBBE_SBBE24--DescriptiveMaps_EN.jpeg", limitsize = FALSE,
        scale = 1, width = 15, height = 12, dpi = 600)
-
 
 #
 ##
