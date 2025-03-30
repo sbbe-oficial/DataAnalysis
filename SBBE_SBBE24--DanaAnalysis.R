@@ -12,7 +12,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 
 # Loads packages ~
-pacman::p_load(tidyverse, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
+pacman::p_load(tidyverse, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, patchwork, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
                geobr, ggspatial, showtext, png, extrafont, sf, ggiraphExtra, fontawesome, shiny, DT,
                rvest, stringr, purrr, tibble, dplyr, extrafont, emojifont)
 
@@ -422,18 +422,18 @@ fulldf_map$Division <- factor(fulldf_map$Division, ordered = T,
 
 # Expands BRL_Regions by creating Region ~
 fulldf_map$Region_PT <- ifelse(fulldf_map$Region %in% c("Northeast"), "Nordeste",
-                       ifelse(fulldf_map$Region %in% c("North"), "Norte",
-                       ifelse(fulldf_map$Region %in% c("Central-West"), "Centro-Oeste",
-                       ifelse(fulldf_map$Region %in% c("Southeast"), "Sudeste",
-                       ifelse(fulldf_map$Region %in% c("South"), "Sul",
-                       ifelse(fulldf_map$Region %in% c("SBBE24"), "SBBE24",
-                       ifelse(fulldf_map$Region %in% c("Abroad"), "Exterior", "Error")))))))
+                        ifelse(fulldf_map$Region %in% c("North"), "Norte",
+                        ifelse(fulldf_map$Region %in% c("Central-West"), "Centro-Oeste",
+                        ifelse(fulldf_map$Region %in% c("Southeast"), "Sudeste",
+                        ifelse(fulldf_map$Region %in% c("South"), "Sul",
+                        ifelse(fulldf_map$Region %in% c("SBBE24"), "SBBE24",
+                        ifelse(fulldf_map$Region %in% c("Abroad"), "Exterior", "Error")))))))
 
 
 # Sets custom x-axis labels ~
 xlabel_PT <- c("Per Region" = "Por Região",
                "Per State" = "Por Estado")
-ylabel_PT <- c("Members" = "% de Membros Fundadores da SBBE",
+ylabel_PT <- c("Members" = "% de Afiliados à SBBE",
                "Attendees" = "% de Participantes no SBBE24")
 xlabel_EN <- c("Members" = "% of SBBE Members",
                "Attendees" = "% of SBBE24 Attendees")
@@ -535,7 +535,7 @@ max_height <- max(Circular$Percentage, na.rm = TRUE) * 100 + 3
 Institution_Plot <-
  ggplot(Circular, aes(x = as.factor(ID), y = Percentage * 100, fill = Region)) +
  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = 1) +
-  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7"), na.translate = FALSE) +
+  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
   geom_segment(data = grid_data_Circular, aes(x = end, y = 5, xend = start, yend = 5), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
   geom_segment(data = grid_data_Circular, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
   geom_segment(data = grid_data_Circular, aes(x = end, y = 15, xend = start, yend = 15), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
@@ -574,6 +574,7 @@ Gender <- fulldfUp %>%
   droplevels() %>%
   arrange(desc(Percentage))
 
+
 empty_bar <- 6
 to_add <- data.frame(matrix(NA, empty_bar * nlevels(Gender$Stats), ncol(Gender)))
 colnames(to_add) <- colnames(Gender)
@@ -603,21 +604,17 @@ grid_data_Gender <- grid_data_Gender[-1, ]
 
 
 # Create a data frame with swapped x, y positions for icons and labels
-data <- data.frame(x = c(.2, .6), y = c(.36, .725), label = fontawesome(c("fa-group", "fa-graduation-cap")))
+data <- data.frame(x = c(.2, .2, .6), y = c(.36, .43, .725), label = fontawesome(c("fa-venus-mars", "fa-genderless", "fa-graduation-cap")))
 text_data <- data.frame(x = c(.2, .6), y = c(.17, .55), label = c("Gênero", "Estágio Acadêmico"))
 
 
 Icons <-
-  ggplot(data, aes(x, y, color = label, label = label)) +
+ggplot(data, aes(x, y, color = label, label = label)) +
   geom_text(family = "fontawesome-webfont", size = 30) +
+  scale_colour_manual(values = c("#e5d8bd", "#fdbf6f", "#fdbf6f"), na.translate = FALSE) +
   geom_text(data = text_data, aes(x, y, label = label), family = "Cormorant", size = 6, fontface = "bold", color = "#000000") +
-  scale_colour_manual(values = c("#fdbf6f", "#e5d8bd"), na.translate = FALSE) +
-  scale_x_continuous("",
-                     limits = c(0, 1),
-                     expand = c(0, 0)) +
-  scale_y_continuous("",
-                     limits = c(0, 1),
-                     expand = c(0, 0)) +
+  scale_x_continuous("", limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous("", limits = c(0, 1), expand = c(0, 0)) +
   theme(legend.position = "none",
         panel.background = element_rect(fill = "transparent", color = NA),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -662,12 +659,39 @@ Gender_PlotUp <- ggdraw() +
                  draw_plot(Icons, x = .27, y = .31, width = .4, height = .4)
 
 
-Final_Plot <- plot_grid(Institution_Plot, Gender_PlotUp, ncol = 2, rel_widths = c(.5, .5))
+# Create a data frame with text positions
+text <- data.frame(x = c(.2, .4, .6, .8), y = c(.6, .6, .6, .6), 
+                   label = c("Afiliados", "Instituições", "Eventos", "Redes Sociais"))
+
+numbers_1 <- data.frame(x = c(.2, .4, .6), y = c(.425, .425, .425), label = c("234", "58", "01"))
+numbers_2 <- data.frame(x = c(.8, .8), y = c(.425, .22), label = c("1.932", "100"))
+icons_1 <- data.frame(x = c(.2, .4, .6), y = c(.22, .22, .22), 
+                    label = fontawesome(c("fa-users", "fa-university", "fa-calendar")))
+icons_2 <- data.frame(x = c(.885, .885), y = c(.425, .22), 
+                      label = fontawesome(c("fa-instagram", "fa-twitter")))
 
 
-# Saves Institution plot ~
-ggsave(Final_Plot, file = "Layka.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 30, height = 14, dpi = 600)
+# Create the plot
+Geral_Plot <- 
+ggplot() +
+  geom_text(data = text, aes(x, y, label = label), color = "#ffffff", size = 10, fontface = "bold", family = "Cormorant") +
+  geom_text(data = numbers_1, aes(x, y, label = label), color = "#ffffff", size = 16, fontface = "bold", family = "Cormorant") +
+  geom_text(data = numbers_2, aes(x, y, label = label), color = "#ffffff", size = 16, fontface = "bold", family = "Cormorant") +
+  geom_text(data = icons_1, aes(x, y, label = label), family = "fontawesome-webfont", size = 12, color = "#ffffff") +
+  geom_text(data = icons_2, aes(x, y, label = label), family = "fontawesome-webfont", size = 12, color = "#ffffff") +
+  annotate("text", x = .5, y = .85, label = "A SBBE em Números", 
+           family = "Cormorant", size = 14, fontface = "bold", color = "#ffffff") +
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  theme(panel.background = element_rect(fill = "#365338", color = NA),
+        plot.background = element_rect(fill = "#365338", color = NA),
+        panel.grid = element_blank(),
+        panel.border = element_blank(),
+        plot.margin = unit(c(0, 0, 0, -1), "cm"),
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(), 
+        axis.ticks = element_blank())
 
 
 # Creates panel ~
@@ -683,22 +707,22 @@ Map <-
   geom_star(data = subset(fulldf_map, Division == "Per Region" & Region == "Abroad"),
             aes(x = Longitude, y = Latitude, fill = Percentage), size = 30, starshape = 8, starstroke = .3, colour = "#f7fbff") +
   geom_label(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
-             aes(x = Longitude, y = Latitude, label = Region),
-             size = 4.5, label.size = .1, family = "Barlow", fill = "#f7fbff", colour = "#000000") +
+             aes(x = Longitude, y = Latitude, label = Region_PT),
+             size = 4.5, label.size = .1, family = "Cormorant", fill = "#f7fbff", colour = "#000000") +
   geom_label(data = subset(fulldf_map,  Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
-             aes(x = Longitude, y = Latitude, label = Region),
-             size = 4.5, label.size = .1, family = "Barlow", fill = "#f7fbff", colour = "#000000") +
+             aes(x = Longitude, y = Latitude, label = Region_PT),
+             size = 4.5, label.size = .1, family = "Cormorant", fill = "#f7fbff", colour = "#000000") +
   geom_label_repel(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
-                   aes(x = Longitude, y = Latitude, label = Region), point.padding = 0,
+                   aes(x = Longitude, y = Latitude, label = Region_PT), point.padding = 0,
                    nudge_x = 3.6, nudge_y = -1, segment.size = 0, segment.color = NA, 
-                   size = 4.5, label.size = .1, family = "Barlow", fill = "#FF7B00", colour = "#000000") +
+                   size = 4.5, label.size = .1, family = "Cormorant", fill = "#FF7B00", colour = "#000000") +
   scale_fill_continuous(low = "#d6d6d6", high = "#004529",
                         breaks = c(10, 20, 30, 40, 50),
                         labels = c("10%", "20%", "30%", "40%", "50%"),
                         limits = c(0, 60)) +
-  facet_wrap(Division ~ ., labeller = labeller(Division = xlabel_PT)) +
+  facet_grid(Stats ~ Division, labeller = labeller(Division = xlabel_PT, Stats = ylabel_PT)) +
   annotation_scale(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"),
-                   text_family = "cormorant", location = "bl", line_width = 1.25, text_cex = 1, style = "ticks",
+                   text_family = "Cormorant", location = "bl", line_width = 1.25, text_cex = 1, style = "ticks",
                    pad_x = unit(.2, "in"), pad_y = unit(.2, "in")) +
   annotation_north_arrow(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"), 
                          location = "bl", which_north = "true", style = north_arrow_fancy_orienteering,
@@ -710,20 +734,28 @@ Map <-
         panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
         panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
         plot.margin =  margin(t = 0, b = 0, r = .5, l = .5, unit = "cm"),
-        axis.text = element_text(family = "Barlow", color = "#000000", size = 13, face = "bold"),
+        axis.text = element_blank(),
         axis.title = element_blank(),
-        axis.ticks = element_line(color = "#000000", linewidth = .25),
-        strip.text = element_text(family = "Barlow", colour = "#000000", size = 22, face = "bold"),
+        axis.ticks = element_blank(),
+        strip.text = element_text(family = "Cormorant", colour = "#000000", size = 22, face = "bold"),
         strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
-  guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Barlow", size = 14, face = "bold"),
+  guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 14, face = "bold"),
                                 barwidth = 1.5, barheight = 14, order = 1, frame.linetype = 1, frame.colour = "#000000",
                                 ticks.colour = "#f7fbff", direction = "vertical", reverse = FALSE, even.steps = TRUE,
                                 draw.ulim = TRUE, draw.llim = TRUE))
 
 
+Final_Panel <- Geral_Plot / (Institution_Plot | Gender_PlotUp) + 
+               plot_layout(heights = c(.4, 1))
 
-ggsave(Panel, file = "SBBE_SBBE24--DescriptiveMaps_EN.jpeg", limitsize = FALSE,
-       scale = 1, width = 15, height = 12, dpi = 600)
+
+# Saves Institution plot ~
+ggsave(Final_Panel, file = "SBBEPanel.pdf", limitsize = FALSE,
+       device = cairo_pdf, scale = 1, width = 30, height = 20, dpi = 600)
+
+ggsave(Map, file = "SBBEMap.pdf", limitsize = FALSE,
+       device = cairo_pdf, scale = 1, width = 16, height = 8, dpi = 600)
+
 
 #
 ##
