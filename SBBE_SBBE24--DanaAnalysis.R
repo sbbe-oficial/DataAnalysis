@@ -14,7 +14,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Loads packages ~
 pacman::p_load(tidyverse, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, patchwork, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
                geobr, ggspatial, showtext, png, extrafont, sf, ggiraphExtra, fontawesome, shiny, DT,
-               rvest, stringr, purrr, tibble, dplyr, extrafont, emojifont)
+               rvest, stringr, purrr, tibble, dplyr, extrafont, emojifont, grid, rsvg, ggimage)
 
 
 # Loads extra fonts ~
@@ -25,11 +25,22 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("SBBEmembers_28mar25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("SBBEmembers--09jul25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
-# Corrects Institution for better visualisation ~
-levels(fulldf$Institution <- gsub("Universidade|Universidad|University", "Uni.", fulldf$Institution))
+# Loads data ~
+extra <- read_excel("./Lists/SBBE24_InscriçõesExtraordinárias_R.xlsx")
+normal <- read_excel("./Lists/ListaParticipante_18-12-2024_11-47-55.xlsx") %>%
+          dplyr::filter(Inscrição == "Aprovado") %>%
+          dplyr::filter(Categoria != "Curso Galaxy - Apenas para inscritos no congresso") %>%
+          dplyr::filter(!ID %in% extra$ID) %>%
+          dplyr::rename(Sub_Area = `Sub Área`)
+
+
+# Merges data frames ~
+Attendees_df <- rbind(extra, normal)
+Attendees_df <- Attendees_df %>%
+                dplyr::select(Nome, ID, Categoria, `Nome Crachá`, UF, Cidade, `Instituição`, `Gênero`)
 
 
 # Gets Stage ~
@@ -38,32 +49,156 @@ fulldf$Stage <- ifelse(grepl("Profissional", fulldf$Labels), "Profissional",
                 ifelse(grepl("Graduacao", fulldf$Labels), "Graduação", NA)))
 
 
-# Expands fulldf by creating Region ~
-fulldf$Region <- ifelse(fulldf$State %in% c("AC", "AM", "AP", "PA", "RR", "RO", "TO"), "Norte",
-                 ifelse(fulldf$State %in% c("MA", "PI", "CE", "RN", "PB", "PE", "AL", "SE", "BA"), "Nordeste",
-                 ifelse(fulldf$State %in% c("DF", "GO", "MT", "MS"), "Centro-Oeste",
-                 ifelse(fulldf$State %in% c("MG", "ES", "RJ", "SP"), "Sudeste",
-                 ifelse(fulldf$State %in% c("PR", "RS", "SC"), "Sul",
-                 ifelse(fulldf$State %in% c("Exterior"), "Exterior", "Error"))))))
+fulldfUp <- fulldf %>%
+            dplyr::select(Name, Stage, Gender, State, Institution) %>%
+            mutate(Data = "Members") %>%
+            mutate(`Nome Crachá` = "") %>%
+            mutate(ID = "")
+
+
+Attendees_dfUp <- Attendees_df %>%
+                  dplyr::rename(Name = Nome, State = UF, Institution = `Instituição`, Name = Nome, Gender = `Gênero`, Stage = Categoria) %>%
+                  dplyr::select(Name, Stage, Gender, State, Institution, `Nome Crachá`, ID) %>%
+                  mutate(Data = "Attendees")
+
+
+# Combines data frames ~
+fulldfUltra <- rbind(fulldfUp, Attendees_dfUp)
+
+
+# Corrects Nome Crachá ~
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Fernanda de Pinho Werneck"), "Fernanda Werneck", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Jose Alexandre Felizola Diniz Filho"), "Jose Diniz-Filho", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Clarisse Palma da Silva"), "Clarisse Palma-Silva", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Andrea Pedrosa Harand"), "Andrea Pedrosa Harand", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Prof. Dr. Frederico Henning"), "Frederico Henning", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Eduardo Tarazona"), "Eduardo Tarazona", fulldfUltra$`Nome Crachá`)
+fulldfUltra$`Nome Crachá` <- ifelse(fulldfUltra$Name %in% c("Fabricio Santos"), "Fabrício R. Santos", fulldfUltra$`Nome Crachá`)
+
+
+# Corrects Nome Crachá ~
+fulldfUltra$Stage <- ifelse(fulldfUltra$Name %in% c("Thomaz Pinotti"), "Mestrando, Doutorando e Pós doutorando", fulldfUltra$Stage)
+fulldfUltra$State <- ifelse(fulldfUltra$Name %in% c("Jeferson Duran Fuentes"), "SP", fulldfUltra$State)
+
+
+# Corrects UF ~
+levels(fulldfUltra$State <- gsub("Rio Grande do Sul", "RS", fulldfUltra$State))
+levels(fulldfUltra$State <- gsub("Goias", "GO", fulldfUltra$State))
+levels(fulldfUltra$State <- gsub("Iowa", "SP", fulldfUltra$State))
+
+
+# Corrects UF speakers ~
+fulldfUltra$State <- ifelse(fulldfUltra$ID %in% c("12821302"), "RS",
+                     ifelse(fulldfUltra$ID %in% c("9314289"), "PR",
+                     ifelse(fulldfUltra$ID %in% c("9176759"), "SP",
+                     ifelse(fulldfUltra$ID %in% c("16590615"), "MG", fulldfUltra$State))))
+
+
+
+# Corrects UF speakers ~
+fulldfUltra$State <- ifelse(fulldfUltra$`Nome Crachá` %in% c("ALENA MAYO INIGUEZ", "Frederico Henning"), "RJ",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Fernanda Werneck"), "AM",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Eduardo Tarazona", "Fabrício Santos", "Luiz Bem"), "MG",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Ana Tourinho"), "MT",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Jose Diniz-Filho"), "GO",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Andrea Pedrosa Harand"), "PE",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Maria Yamamoto", "Felipe de Oliveira Torquato"), "RN",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Clarisse Palma-Silva", "Nelio Bizzo", "Mario Pinna", "Tábita Hünemeier", "Tiago Quental"), "SP",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("waldemir rosa"), "PR",
+                     ifelse(fulldfUltra$`Nome Crachá` %in% c("Kateryna Makov", "Kelly Zamudio", "Santiago Vieyra", "Thomaz Pinotti"), "Estrangeiro", fulldfUltra$State))))))))))
+
+
+# Corrects State ~
+fulldfUltra$State <- ifelse(fulldfUltra$Name %in% c("Alex Anderson Antony Bandeira de Carvalho",
+                                                    "Ana Flávia Konig Braz",
+                                                    "Bruna Debas Brito",
+                                                    "Deborah Miho Chinen Toyomoto",
+                                                    "Eduarda Maria de Melo de Faria",
+                                                    "Gabriele Tomaz Vieira",
+                                                    "George Pacheco",
+                                                    "Gustavo Henrique Lopes",
+                                                    "Ingrid Lavínia Malosti Vieira",
+                                                    "Lucas Rafael Cabral Jara",
+                                                    "Luiza Teixeira da Silva",
+                                                    "Maria Clara Andrade dos Santos",
+                                                    "Melissa Vitória Flórido",
+                                                    "Rafael Sartori Lam",
+                                                    "Ramon Trindade Urbano",
+                                                    "rebeca Taborda Ribas Matos",
+                                                    "Sofia Demétrio Nicolau",
+                                                    "Vinícius Castro Burgo"), "Exterior", fulldfUltra$State)
+
+
+# Corrects State ~
+fulldfUltra$State <- ifelse(fulldfUltra$State %in% c(NA, "Aberdeen City", "california", "Florida", "Misiones", "Texas",
+                                                     "Córdoba", "Provincia de Buenos Aires", "Ontario", "Capital Federal", "La Libertad"), "Exterior", fulldfUltra$State)
+
+
+# Corrects Category ~
+levels(fulldfUltra$Stage <- sub("CBBE", "SBBE24", fulldfUltra$Stage))
+
+
+# Converts Nome Crachá to lowercase ~
+fulldfUltra$Badge <- tolower(fulldfUltra$`Nome Crachá`)
+
+
+# Orders df based on Badge ~
+fulldfUltra <- fulldfUltra[order(fulldfUltra$Badge), ]
+
+
+# Gets counts of occurrences ~
+NameCounts <- table(fulldfUltra$Badge)
+
+
+# Prints repeated entries ~
+NameCounts[NameCounts > 1]
+
+
+# Defines entries to exclude ~
+RowsToKeep <- !((grepl("alessandra p. lamarca|carlos guerra schrago|clarisse palma-silva|fabrício r. santos|fabricius domingos|fernando sotero|iris hass|nelio bizzo", fulldfUltra$Badge) & fulldfUltra$Stage == "Profissional") |
+               (grepl("meari caldeira", fulldfUltra$Badge) & fulldfUltra$Stage == "Mestrando, Doutorando e Pós doutorando") |
+               (grepl("lucca fanti", fulldfUltra$Badge) & fulldfUltra$Stage == "Estudante de Graduação"))
+
+
+# Excludes repeated entries ~
+fulldfUltra <- fulldfUltra[RowsToKeep, ]
+
+
+# Corrects Categoria for repeated entries  ~
+fulldfUltra$Stage <- ifelse(fulldfUltra$Badge %in% c("alessandra p. lamarca|carlos guerra schrago|clarisse palma-silva|fabrício r. santos|fabricius domingos|fernando sotero|iris hass|nelio bizzo"), "Profissional + Membro fundador da SBBE", fulldfUltra$Stage)
+fulldfUltra$Stage <- ifelse(fulldfUltra$Badge %in% c("meari caldeira"), "Mestrando, Doutorando e Pós doutorando + Membro fundador da SBBE", fulldfUltra$Stage)
+fulldfUltra$Stage <- ifelse(fulldfUltra$Badge %in% c("lucca fanti"), "Estudante de Graduação + Membro fundador da SBBE", fulldfUltra$Stage)
+
+
+# Corrects Institution & State for better visualisation ~
+levels(fulldfUltra$Institution <- gsub("Universidade|Universidad|University", "Uni.", fulldfUltra$Institution))
+levels(fulldfUltra$Institution <- gsub("Instituto|Institute", "Inst.", fulldfUltra$Institution))
+levels(fulldfUltra$State <- gsub("Estrangeiro", "Exterior", fulldfUltra$State))
+
+
+# Corrects Gender ~
+fulldfUltra$Gender <- ifelse(fulldfUltra$Gender %in% c("M", "Masculino"), "Masculino",
+                      ifelse(fulldfUltra$Gender %in% c("F", "Feminino"), "Feminino",
+                      ifelse(fulldfUltra$Gender %in% c("O", "Outro"), "Outro", "Error")))
 
 
 # Defines the custom capitalization function ~
 capitalize_words <- function(text) {
-  words <- str_split(text, " ")[[1]]
-  exclude_patterns <- c("of", "de", "da", "do", "ABC", "Não-binário", "(EUA)")
-  patterns_map <- setNames(exclude_patterns, tolower(exclude_patterns))
-  words <- sapply(words, function(word) {
-    word_lower <- tolower(word)
-    if (word_lower %in% names(patterns_map)) {
-      patterns_map[[word_lower]]}
-    else {str_to_title(word)}})
-  str_c(words, collapse = " ")}
+                    words <- str_split(text, " ")[[1]]
+                    exclude_patterns <- c("of", "de", "da", "do", "ABC", "Não-binário", "and", "(EUA)")
+                    patterns_map <- setNames(exclude_patterns, tolower(exclude_patterns))
+                    words <- sapply(words, function(word) {
+                    word_lower <- tolower(word)
+                    if (word_lower %in% names(patterns_map)) {
+                    patterns_map[[word_lower]]}
+                    else {str_to_title(word)}})
+                    str_c(words, collapse = " ")}
 
 
 # Apply the function to the pattern column
-fulldf$Name <- sapply(fulldf$Name , capitalize_words)
-fulldf$Institution <- sapply(fulldf$Institution , capitalize_words)
-fulldf$Gender <- sapply(fulldf$Gender, capitalize_words)
+fulldfUltra$Name <- sapply(fulldfUltra$Name , capitalize_words)
+fulldfUltra$Institution <- sapply(fulldfUltra$Institution , capitalize_words)
+fulldfUltra$Gender <- sapply(fulldfUltra$Gender, capitalize_words)
 
 
 # Sets all Brazilian states ~ 
@@ -93,6 +228,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Seguidores no Instagram",
                      "Instituições representadas na SBBE",
                      "Afiliados à SBBE",
+                     "Okinawa Inst. of Science and Technology (Japão)",
                      "Uni. of Ottawa (Canadá)",
                      "Pennsylvania State Uni. (EUA)",
                      "Uni. of Texas (EUA)",
@@ -105,8 +241,8 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. of Copenhagen (Dinamarca)",
                      "Uni. Nacional de Misiones (Argentina)",
                      "Uni. Nacional de Trujillo (Argentina)",
-                     "Instituto de Biología Subtropical (Argentina)",
-                     "Instituto Multidisciplinario de Biología Vegetal (Argentina)",
+                     "Inst. de Biología Subtropical (Argentina)",
+                     "Inst. Multidisciplinario de Biología Vegetal (Argentina)",
                      "Uni. Nacional de Córdoba (Argentina)",
                      "Uni. de Buenos Aires (Argentina)",
                      "Uni. Federal de Santa Maria",
@@ -120,11 +256,11 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Centro Universitário Claretiano",
                      "Uningá",
                      "Museu de História Natural Capão da Imbuia",
-                     "Instituto Carlos Chagas — Fiocruz Paraná",
+                     "Inst. Carlos Chagas — Fiocruz Paraná",
                      "Uni. Estadual de Ponta Grossa",
                      "Uni. Estadual do Centro-Oeste do Paraná",
                      "Secretaria de Educação do Estado do Paraná",
-                     "Instituto Federal — Paraná",
+                     "Inst. Federal — Paraná",
                      "Uni. Tecnológica Federal do Paraná",
                      "Pontifícia Uni. Católica do Paraná",
                      "Uni. Federal do Paraná",
@@ -133,7 +269,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. da Região de Joinville",
                      "Uni. Federal de Santa Catarina",
                      "Uni. do Vale do Paraíba",
-                     "Instituto Butantan",
+                     "Inst. Butantan",
                      "Uni. do Vale do Itajaí",
                      "Uni. Santo Amaro",
                      "Uni. do Oeste Paulista",
@@ -146,11 +282,11 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Estadual Paulista",
                      "Unisãojosé",
                      "Uni. Estadual do Norte Fluminense Darcy Ribeiro",
-                     "Instituto Oswaldo Cruz",
+                     "Inst. Oswaldo Cruz",
                      "Uni. Federal do Rio de Janeiro",
                      "Uni. do Estado do Rio de Janeiro",
                      "Uni. Federal do Espírito Santo",
-                     "Instituto Nacional da Mata Atlântica",
+                     "Inst. Nacional da Mata Atlântica",
                      "Pontifícia Uni. Católica de Minas Gerais",
                      "Uni. Federal de Uberlândia", 
                      "Uni. Federal do Triângulo Mineiro",
@@ -174,19 +310,20 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Estadual de Feira de Santana",
                      "Uni. Federal do Recôncavo da Bahia",
                      "Uni. Estadual do Sudoeste da Bahia",
+                     "Uni. Federal do Maranhão",
                      "Uni. Federal de Sergipe",
                      "Uni. Federal de Alagoas",
                      "Uni. Federal do Vale do São Francisco",
                      "Uni. de Pernambuco",
-                     "Instituto Aggeu Magalhães — Fiocruz Pernambuco",
-                     "Instituto Federal — Pernambuco",
+                     "Inst. Aggeu Magalhães — Fiocruz Pernambuco",
+                     "Inst. Federal — Pernambuco",
                      "Uni. Federal de Pernambuco",
                      "Uni. Estadual da Paraíba",
                      "Uni. Federal da Paraíba",
                      "Uni. Federal do Rio Grande do Norte",
                      "Museu Paraense Emílio Goeldi",
                      "Uni. Federal do Pará",
-                     "Instituto Nacional de Pesquisas da Amazônia",
+                     "Inst. Nacional de Pesquisas da Amazônia",
                      "Uni. Federal do Amazonas",
                      "Feminino",
                      "Masculino",
@@ -199,102 +336,134 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Norte")
 
 
-# Gets current date ~
-current_date <- Sys.Date()
-
-
 # Checks missing Institution ~
-setdiff(fulldf$Institution, variable_levels)
+setdiff(fulldfUltra$Institution[fulldfUltra$Data == "Members"], variable_levels)
+
+
+# Expands fulldf by creating Region ~
+fulldfUltra$Region <- ifelse(fulldfUltra$State %in% c("AC", "AM", "AP", "PA", "RR", "RO", "TO"), "Norte",
+                      ifelse(fulldfUltra$State %in% c("MA", "PI", "CE", "RN", "PB", "PE", "AL", "SE", "BA"), "Nordeste",
+                      ifelse(fulldfUltra$State %in% c("DF", "GO", "MT", "MS"), "Centro-Oeste",
+                      ifelse(fulldfUltra$State %in% c("MG", "ES", "RJ", "SP"), "Sudeste",
+                      ifelse(fulldfUltra$State %in% c("PR", "RS", "SC"), "Sul",
+                      ifelse(fulldfUltra$State %in% c("Exterior"), "Exterior", "Error"))))))
 
 
 # Gets general numbers ~
-fulldf_Descriptive <- fulldf %>%
+fulldf_Descriptive <- subset(fulldfUltra, Data == "Members") %>%
                       summarise("Afiliados à SBBE" = n_distinct(Name),
                                 "Instituições representadas na SBBE" = n_distinct(Institution),
                                 "Seguidores no Instagram" = 1922, 
                                 "Seguidores no Bluesky" = 29) %>%
-  mutate(Stats = "General") %>%
-  pivot_longer(cols = -Stats, names_to = "Variable", values_to = "Percentage") %>%
-  mutate(n = 0) %>%
-  relocate(n, .before = Percentage) %>%
-  relocate(Stats, .after = Percentage) %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+                      mutate(Stats = "General") %>%
+                      pivot_longer(cols = -Stats, names_to = "Variable", values_to = "Percentage") %>%
+                      mutate(n = 0) %>%
+                      relocate(n, .before = Percentage) %>%
+                      relocate(Stats, .after = Percentage) %>%
+                      mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
 
 
 # Gets percentage for Institution ~
-fulldf_StageMembersPerc <- fulldf %>%
-  count(Stage) %>%
-  mutate(Percentage = n / sum(n)) %>%
-  rename(Variable = Stage) %>%
-  mutate(Stats = "StageMembers") %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+fulldf_StageMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
+                           count(Stage) %>%
+                           mutate(Percentage = n / sum(n)) %>%
+                           rename(Variable = Stage) %>%
+                           mutate(Stats = "StageMembers") %>%
+                           mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
 
 
 # Create a data frame with counts and proportions per institution ~
-fulldf_StateMembersPerc <- fulldf %>%
-  count(State) %>%
-  mutate(Percentage = n / sum(n)) %>%
-  rename(Variable = State) %>%
-  complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-  mutate(Stats = "StateMembers")
+fulldf_StateMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
+                           count(State) %>%
+                           mutate(Percentage = n / sum(n)) %>%
+                           rename(Variable = State) %>%
+                           complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
+                           mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                           mutate(Stats = "StateMembers")
 
 
 # Create a data frame with counts and proportions per institution ~
-fulldf_RegionMembersPerc <- fulldf %>%
-  filter(Region != "Error") %>%
-  count(Region) %>%
-  mutate(Percentage = n / sum(n)) %>%
-  rename(Variable = Region) %>%
-  complete(Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-  mutate(Stats = "RegionMembers")
+fulldf_RegionMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
+                            filter(Region != "Error") %>%
+                            count(Region) %>%
+                            mutate(Percentage = n / sum(n)) %>%
+                            rename(Variable = Region) %>%
+                            complete(Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
+                            mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                            mutate(Stats = "RegionMembers")
+
+
+# Create a data frame with counts and proportions per institution ~
+fulldf_StateAttendeesPerc <- subset(fulldfUltra, Data == "Attendees") %>%
+                             count(State) %>%
+                             mutate(Percentage = n / sum(n)) %>%
+                             rename(Variable = State) %>%
+                             complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
+                             mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                             mutate(Stats = "StateAttendees")
+
+
+# Create a data frame with counts and proportions per institution ~
+fulldf_RegionAttendeesPerc <- subset(fulldfUltra, Data == "Attendees") %>%
+                              filter(Region != "Error") %>%
+                              count(Region) %>%
+                              mutate(Percentage = n / sum(n)) %>%
+                              rename(Variable = Region) %>%
+                              complete(Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
+                              mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                              mutate(Stats = "RegionAttendees")
 
 
 # Gets percentage for Gender ~
-fulldf_GenderMembersPerc <- fulldf %>%
-  filter(Region != "Error") %>%
-  count(Gender) %>%
-  mutate(Percentage = n / sum(n)) %>%
-  rename(Variable = Gender) %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-  mutate(Stats = "GenderMembers")
+fulldf_GenderMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
+                            filter(Region != "Error") %>%
+                            count(Gender) %>%
+                            mutate(Percentage = n / sum(n)) %>%
+                            rename(Variable = Gender) %>%
+                            mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                            mutate(Stats = "GenderMembers")
 
 
-fulldf_InstitutionMembersPerc <- fulldf %>%
-  filter(Institution != "") %>%
-  count(Institution, Region) %>%  # Count by both Institution and Region
-  mutate(Percentage = n / sum(n)) %>%
-  rename(Variable = Institution) %>%
-  mutate(Stats = "InstitutionMembers") %>%
-  mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+fulldf_InstitutionMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
+                                 filter(Institution != "") %>%
+                                 count(Institution, Region) %>%
+                                 mutate(Percentage = n / sum(n)) %>%
+                                 rename(Variable = Institution) %>%
+                                 mutate(Stats = "InstitutionMembers") %>%
+                                 mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
 
 
 # Combine the data frames ~  
-fulldfUp <- bind_rows(fulldf_StageMembersPerc,
-                      fulldf_StateMembersPerc,
-                      fulldf_RegionMembersPerc,
-                      fulldf_GenderMembersPerc,
-                      fulldf_InstitutionMembersPerc)
+fulldfPlots <- bind_rows(fulldf_StageMembersPerc,
+                         fulldf_StateMembersPerc,
+                         fulldf_RegionMembersPerc,
+                         fulldf_GenderMembersPerc,
+                         fulldf_InstitutionMembersPerc)
 
 
 # Expands fulldfUp by creating BarFill ~
-fulldfUp$BarFill <- ifelse(str_detect(fulldfUp$Stats, "Members"), "#006837",
-                    ifelse(str_detect(fulldfUp$Stats, "Attendees"), "#41ab5d", "#fbb4ae"))
+fulldfPlots$BarFill <- ifelse(str_detect(fulldfPlots$Stats, "Members"), "#006837",
+                       ifelse(str_detect(fulldfPlots$Stats, "Attendees"), "#41ab5d", "#fbb4ae"))
 
 
 # Reorders Population ~
-fulldfUp$Stats <- factor(fulldfUp$Stats, ordered = T,
-                         levels = c("StageMembers",
-                                    "StateMembers",
-                                    "RegionMembers",
-                                    "GenderMembers",
-                                    "InstitutionMembers"))
+fulldfPlots$Stats <- factor(fulldfPlots$Stats, ordered = T,
+                            levels = c("StageMembers",
+                                       "StateMembers",
+                                       "RegionMembers",
+                                       "GenderMembers",
+                                       "InstitutionMembers"))
 
 
 # Sets custom x-axis labels ~
-ylabel <- c("StageMembers" = "Afiliados à SBBE por Estágio Acadêmico",
-            "GenderMembers" = "Membros da SBBE por por Gênero")
+xlabel_PT <- c("Per Region" = "Por Região",
+               "Per State" = "Por Estado")
+ylabel_PT <- c("Members" = "% de Membros Fundadores da SBBE",
+               "Attendees" = "% de Participantes no SBBE24")
+xlabel_EN <- c("Members" = "% of SBBE Members",
+               "Attendees" = "% of SBBE24 Attendees")
+ylabel_EN <- c("Members" = "% of SBBE Members",
+               "Attendees" = "% of SBBE24 Attendees")
 
 
 # Load geom data ~
@@ -333,39 +502,51 @@ BRL_Regions <- left_join(BRL_Regions, BRL_Regions_Centroids_df, by = "Region")
 
 # Reduces data ~ 
 BRL_Regions <- BRL_Regions %>%
-  dplyr::select(-code_region)
+               dplyr::select(-code_region)
 BRL_States <- BRL_States %>%
-  dplyr::select(-c(code_state, code_region, name_state))
+              dplyr::select(-c(code_state, code_region, name_state))
 
 
 # Renames columns ~
 BRL_States <- BRL_States %>%
-  rename(Variable = abbrev_state)
+              rename(Variable = abbrev_state)
 
 
 # Joins data frames ~
 fulldf_RegionMembersPerc <- fulldf_RegionMembersPerc %>%
                             rename(name_region = Variable)
+fulldf_RegionAttendeesPerc <- fulldf_RegionAttendeesPerc %>%
+                              rename(name_region = Variable)
 
 
 # Corrects the Estrangeiro -> Abroad ~
 levels(fulldf_StateMembersPerc$Variable <- gsub("Exterior", "Abroad", fulldf_StateMembersPerc$Variable))
 levels(fulldf_RegionMembersPerc$name_region <- gsub("Exterior", "Abroad", fulldf_RegionMembersPerc$name_region))
+levels(fulldf_StateAttendeesPerc$Variable <- gsub("Exterior", "Abroad", fulldf_StateAttendeesPerc$Variable))
+levels(fulldf_RegionAttendeesPerc$name_region <- gsub("Exterior", "Abroad", fulldf_RegionAttendeesPerc$name_region))
 
 
 # Merges data frames individually ~
 RegionMembers_df <- BRL_States %>%
-  inner_join(fulldf_RegionMembersPerc, by = "name_region") %>%
-  mutate(Stats = "Members")  %>%
-  mutate(Division = "Per Region")
+                    inner_join(fulldf_RegionMembersPerc, by = "name_region") %>%
+                    mutate(Stats = "Members")  %>%
+                    mutate(Division = "Per Region")
 StateMembers_df <- BRL_States %>%
-  inner_join(fulldf_StateMembersPerc, by = "Variable") %>%
-  mutate(Stats = "Members") %>%
-  mutate(Division = "Per State")
+                   inner_join(fulldf_StateMembersPerc, by = "Variable") %>%
+                   mutate(Stats = "Members") %>%
+                   mutate(Division = "Per State")
+RegionAttendees_df <- BRL_States %>%
+                      inner_join(fulldf_RegionAttendeesPerc, by = "name_region") %>%
+                      mutate(Stats = "Attendees")  %>%
+                      mutate(Division = "Per Region")
+StateAttendees_df <- BRL_States %>%
+                     inner_join(fulldf_StateAttendeesPerc, by = "Variable") %>%
+                     mutate(Stats = "Attendees") %>%
+                     mutate(Division = "Per State")
 
 
 # Combines data frames ~
-combined_sfs <- bind_rows(StateMembers_df, RegionMembers_df)
+combined_sfs <- bind_rows(StateAttendees_df, StateMembers_df, RegionAttendees_df, RegionMembers_df)
 
 
 # Expands combined_sfs by adding the SBBE24 row ~
@@ -410,8 +591,9 @@ fulldf_map <- left_join(fulldf_map, BRL_Regions_Centroids_df, by = "Variable", s
 
 
 # Reorders Population ~
-fulldf_map$Stats <- factor(fulldf_map$Stats, ordered = T,
-                           levels = c("Members"))
+fulldf_map$Stats <- factor(fulldf_map$Stats, ordered = TRUE,
+                           levels = c("Members",
+                                      "Attendees"))
 
 
 # Reorders Division ~
@@ -430,19 +612,8 @@ fulldf_map$Region_PT <- ifelse(fulldf_map$Region %in% c("Northeast"), "Nordeste"
                         ifelse(fulldf_map$Region %in% c("Abroad"), "Exterior", "Error")))))))
 
 
-# Sets custom x-axis labels ~
-xlabel_PT <- c("Per Region" = "Por Região",
-               "Per State" = "Por Estado")
-ylabel_PT <- c("Members" = "% de Afiliados à SBBE",
-               "Attendees" = "% de Participantes no SBBE24")
-xlabel_EN <- c("Members" = "% of SBBE Members",
-               "Attendees" = "% of SBBE24 Attendees")
-ylabel_EN <- c("Members" = "% of SBBE Members",
-               "Attendees" = "% of SBBE24 Attendees")
-
-
 # Creates the Circular data frame ~
-Circular <- subset(fulldfUp, Stats == "InstitutionMembers") %>% arrange(desc(Percentage))
+Circular <- subset(fulldfPlots, Stats == "InstitutionMembers") %>% arrange(desc(Percentage))
 
 
 # Reorders Population ~
@@ -500,79 +671,98 @@ fulldf_map$name_region <- factor(fulldf_map$name_region, ordered = TRUE,
                                      "Abroad"))
 
 
-# Creates panel ~
-MiniMap <-
-  ggplot() +
+# Creates MiniMaps ~
+MiniMap_PT <- ggplot() +
   geom_sf(data = subset(fulldf_map, name_region != "SBBE24"), aes(fill = name_region), colour = "#f7fbff") +
   geom_star(data = subset(fulldf_map, Division == "Per Region" & Region == "Abroad"),
-            aes(x = Longitude, y = Latitude, fill = name_region), size = 26, starshape = 8, starstroke = .3, colour = "#f7fbff") +
+            aes(x = Longitude, y = Latitude, fill = name_region), size = 30, starshape = 8, starstroke = .3, colour = "#f7fbff") +
   scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
-  geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
-                  aes(x = Longitude, y = Latitude, label = Region_PT),
-                  family = "Cormorant", size = 5.25, colour = "#ffffff") +
-  coord_sf(xlim = c(-75.75, -33),
-           ylim = c(-35, 6.5),
-           expand = FALSE) +
+  geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
+            aes(x = Longitude, y = Latitude, label = Region_PT),
+            family = "Cormorant", fontface = "bold", size = 34, colour = "#000000") +
+  coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+  theme_void() +
   theme(legend.position = "none",
         panel.background = element_rect(fill = "transparent", color = NA),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.border = element_blank(),
-        panel.grid = element_blank(),
-        plot.margin =  margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank())
+        plot.background = element_rect(fill = "transparent", color = NA))
+
+MiniMap_EN <- ggplot() +
+  geom_sf(data = subset(fulldf_map, name_region != "SBBE24"), aes(fill = name_region), colour = "#f7fbff") +
+  geom_star(data = subset(fulldf_map, Division == "Per Region" & Region == "Abroad"),
+            aes(x = Longitude, y = Latitude, fill = name_region), size = 30, starshape = 8, starstroke = .3, colour = "#f7fbff") +
+  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
+  geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
+            aes(x = Longitude, y = Latitude, label = Region),
+            family = "Cormorant", fontface = "bold", size = 34, colour = "#000000") +
+  coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA))
 
 
 # Convert map plot into a grob
-MiniMap_Grob <- ggplotGrob(MiniMap)
+MiniMap_Grob_PT <- ggplotGrob(MiniMap_PT)
+MiniMap_Grob_EN <- ggplotGrob(MiniMap_EN)
 
 
+# Gets dynamic label height ~
 max_height <- max(Circular$Percentage, na.rm = TRUE) * 100 + 3
 
 
-# Generates plot ~
-Institution_Plot <-
- ggplot(Circular, aes(x = as.factor(ID), y = Percentage * 100, fill = Region)) +
- geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = 1) +
-  scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
-  geom_segment(data = grid_data_Circular, aes(x = end, y = 5, xend = start, yend = 5), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Circular, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Circular, aes(x = end, y = 15, xend = start, yend = 15), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Circular, aes(x = end, y = 20, xend = start, yend = 20), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  annotate("text", x = rep(max(Circular$ID), 4), y = c(5, 10, 15, 20), label = c("5%", "10%", "15%", "20%"), family = "Cormorant", size = 4, fontface = "bold", color = "#737373", angle = 0, hjust = 1) +
-  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
-  ylim(-100, 80) +
-  theme(panel.background = element_rect(fill = "transparent", color = NA),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.grid = element_blank(),
-        panel.border = element_blank(),
-        plot.margin = unit(c(-5.8, -4, -4, -3), "cm"),
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(), 
-        axis.ticks = element_blank()) +
-  coord_polar() + 
-  #geom_text(data = label_data, aes(x = ID, y = max_height, label = Variable, hjust = hjust), family = "Barlow", size = 3.5, color = "#000000", fontface = "bold", alpha = .6, angle = label_data$angle, inherit.aes = FALSE ) +
-  geom_text(data = label_data_Circular, aes(x = ID, y = Percentage * 100 + 6, label = Variable, hjust = hjust), family = "Cormorant", size = 5, color = "#737373", fontface = "bold", angle = label_data_Circular$angle, inherit.aes = FALSE ) +
-  geom_segment(data = base_data_Circular, aes(x = start, y = -5, xend = end, yend = -5), colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
- 
+# Function to build and save Institution plots ~
+make_institution_plot <- function(title_text, filename, minimap_plot) {
+Institution_Plot <- ggplot(Circular, aes(x = as.factor(ID), y = Percentage * 100, fill = Region)) +
+                     geom_bar(stat = "identity", alpha = 1) +
+                     scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
+                     geom_segment(data = grid_data_Circular, aes(x = end, y = 5, xend = start, yend = 5), 
+                                  colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                     geom_segment(data = grid_data_Circular, aes(x = end, y = 10, xend = start, yend = 10), 
+                                  colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                     geom_segment(data = grid_data_Circular, aes(x = end, y = 15, xend = start, yend = 15), 
+                                  colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                     annotate("text", x = rep(max(Circular$ID), 3), y = c(5, 10, 15), 
+                              label = c("5%", "10%", "15%"), family = "Cormorant", size = 26, fontface = "bold", 
+                              color = "#000000", hjust = 1) +
+                     geom_bar(stat = "identity", alpha = .5) +
+                     ylim(-100, 80) +
+                     labs(title = title_text) +
+                     theme(panel.background = element_rect(fill = "#ffffff"),
+                           panel.grid = element_blank(),
+                           panel.border = element_blank(),
+                           legend.position = "none",
+                           plot.title = element_text(family = "Cormorant", size = 250, face = "bold", 
+                                                     hjust = .5, margin = margin(t = 30)),
+                           axis.text = element_blank(),
+                           axis.title = element_blank(), 
+                           axis.ticks = element_blank()) +
+                     coord_polar() +
+                     geom_text(data = label_data_Circular, aes(x = ID, y = Percentage * 100 + 6, 
+                               label = Variable, hjust = hjust), family = "Cormorant", size = 30, 
+                               color = "#000000", fontface = "bold", angle = label_data_Circular$angle, inherit.aes = FALSE) +
+                     geom_segment(data = base_data_Circular, aes(x = start, y = -5, xend = end, yend = -5), 
+                                  colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
+  
 
-# Overlays plots ~
-Institution_Plot <- ggdraw() +
-                    draw_plot(Institution_Plot) + 
-                    draw_plot(MiniMap, x = .31, y = .33, width = .4, height = .4)
-      
-      
-# Saves Institution plot ~
-ggsave(Institution_Plot, file = "Institution_Plot_B.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 15, height = 14, dpi = 600)
+Institution_PlotUp <- ggdraw() +
+                      draw_plot(Institution_Plot) +
+                      draw_plot(minimap_plot, x = .329, y = .29, width = .35, height = .35)
+  
+
+ggsave(Institution_PlotUp, file = filename, limitsize = FALSE,
+       device = "png", scale = 1, width = 14, height = 14, dpi = 600)}
 
 
-Gender <- fulldfUp %>% 
-  filter(Stats == "GenderMembers" | Stats == "StageMembers") %>%
-  droplevels() %>%
-  arrange(desc(Percentage))
+# Runs function to get both Institution plots ~
+make_institution_plot("Instituições Representadas na SBBE", "SBBEMembersInstitution_PT.png", MiniMap_PT)
+make_institution_plot("Institutions Represented in SBBE",   "SBBEMembersInstitution_EN.png", MiniMap_EN)
+
+
+# Gets Gender data frame ~
+Gender <- fulldfPlots %>% 
+          filter(Stats == "GenderMembers" | Stats == "StageMembers") %>%
+          droplevels() %>%
+          arrange(desc(Percentage))
 
 
 empty_bar <- 6
@@ -583,11 +773,30 @@ Gender <- rbind(Gender, to_add)
 Gender <- Gender %>% arrange(Stats)
 Gender$ID <- seq(1, nrow(Gender))
 
+
+# Expands BRL_Regions by creating Region ~
+Gender$Variable_EN <- ifelse(Gender$Variable %in% c("Masculino"), "Male",
+                      ifelse(Gender$Variable %in% c("Feminino"), "Female",
+                      ifelse(Gender$Variable %in% c("Outro"), "Other",
+                      ifelse(Gender$Variable %in% c("Profissional"), "Professional",
+                      ifelse(Gender$Variable %in% c("Pós-graduação"), "Post-graduate",
+                      ifelse(Gender$Variable %in% c("Graduação"), "Undergraduate", Gender$Variable))))))
+
+
 label_data_Gender <- Gender
 number_of_bar <- nrow(label_data_Gender)
 angle <- 90 - 360 * (label_data_Gender$ID - .5) / number_of_bar
 label_data_Gender$hjust <- ifelse(angle < -90, 1, 0)
 label_data_Gender$angle <- ifelse(angle < -90, angle + 180, angle)
+
+
+# Expands BRL_Regions by creating Region ~
+label_data_Gender$Variable_EN <- ifelse(Gender$Variable %in% c("Masculino"), "Male",
+                                 ifelse(Gender$Variable %in% c("Feminino"), "Female",
+                                 ifelse(Gender$Variable %in% c("Outro"), "Other",
+                                 ifelse(Gender$Variable %in% c("Profissional"), "Professional",
+                                 ifelse(Gender$Variable %in% c("Pós-graduação"), "Post-graduate",
+                                 ifelse(Gender$Variable %in% c("Graduação"), "Undergraduate", label_data_Gender$Variable))))))
 
 base_data_Gender <- Gender %>% 
   group_by(Stats) %>% 
@@ -605,157 +814,242 @@ grid_data_Gender <- grid_data_Gender[-1, ]
 
 # Create a data frame with swapped x, y positions for icons and labels
 data <- data.frame(x = c(.2, .2, .6), y = c(.36, .43, .725), label = fontawesome(c("fa-venus-mars", "fa-genderless", "fa-graduation-cap")))
-text_data <- data.frame(x = c(.2, .6), y = c(.17, .55), label = c("Gênero", "Estágio Acadêmico"))
+text_data <- data.frame(x = c(.2, .6), y = c(.1, .8), label = c("Gênero", "Estágio Acadêmico"))
 
 
-Icons <-
-ggplot(data, aes(x, y, color = label, label = label)) +
-  geom_text(family = "fontawesome-webfont", size = 30) +
-  scale_colour_manual(values = c("#e5d8bd", "#fdbf6f", "#fdbf6f"), na.translate = FALSE) +
-  geom_text(data = text_data, aes(x, y, label = label), family = "Cormorant", size = 6, fontface = "bold", color = "#000000") +
-  scale_x_continuous("", limits = c(0, 1), expand = c(0, 0)) +
-  scale_y_continuous("", limits = c(0, 1), expand = c(0, 0)) +
-  theme(legend.position = "none",
-        panel.background = element_rect(fill = "transparent", color = NA),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.border = element_blank(),
-        panel.grid = element_blank(),
-        plot.margin = margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank())
+# Function to build and save Gender plots ~
+make_gender_plot <- function(title_text, filename, label_column) {
+  Gender_Plot <- ggplot(Gender, aes(x = as.factor(ID), y = Percentage * 100, fill = Stats)) +
+    geom_bar(stat = "identity", alpha = 1) +
+    geom_segment(data = grid_data_Gender, aes(x = end, y = 10, xend = start, yend = 10), 
+                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+    geom_segment(data = grid_data_Gender, aes(x = end, y = 20, xend = start, yend = 20), 
+                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+    geom_segment(data = grid_data_Gender, aes(x = end, y = 30, xend = start, yend = 30), 
+                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+    geom_segment(data = grid_data_Gender, aes(x = end, y = 40, xend = start, yend = 40), 
+                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+    geom_segment(data = grid_data_Gender, aes(x = end, y = 50, xend = start, yend = 50), 
+                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+    annotate("text", x = rep(max(Gender$ID), 5), y = c(10, 20, 30, 40, 50), 
+             label = c("10%", "20%", "30%", "40%", "50%"), family = "Cormorant", size = 22, 
+             fontface = "bold", color = "#000000", hjust = 1) +
+    geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
+    scale_fill_manual(values = c("#e5d8bd", "#fdbf6f"), na.translate = FALSE) +
+    ylim(-90, 70) +
+    labs(title = title_text) +
+    theme(panel.background = element_rect(fill = "#ffffff"),
+          panel.grid = element_blank(),
+          panel.border = element_blank(),
+          legend.position = "none",
+          plot.title = element_text(family = "Cormorant", size = 100, face = "bold", hjust = .5, margin = margin(t = 10)),
+          axis.text = element_blank(),
+          axis.title = element_blank(), 
+          axis.ticks = element_blank()) +
+    coord_polar() +
+    geom_text(data = label_data_Gender, 
+              aes(x = ID, y = Percentage * 100 + 6, 
+                  label = .data[[label_column]], hjust = hjust), 
+              family = "Cormorant", size = 25, color = "#000000", 
+              fontface = "bold", angle = label_data_Gender$angle, inherit.aes = FALSE) +
+    geom_segment(data = base_data_Gender, 
+                 aes(x = start, y = -5, xend = end, yend = -5), 
+                 colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
+  
+  ggsave(Gender_Plot, file = filename, limitsize = FALSE,
+         device = "png", scale = 1, width = 8, height = 7, dpi = 600)}
 
 
-# Generates plot ~
-Gender_Plot <-
-  ggplot(Gender, aes(x = as.factor(ID), y = Percentage * 100, fill = Stats)) +
-  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Stats), stat = "identity", alpha = 1) +
-  geom_segment(data = grid_data_Gender, aes(x = end, y = 10, xend = start, yend = 10), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Gender, aes(x = end, y = 20, xend = start, yend = 20), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Gender, aes(x = end, y = 30, xend = start, yend = 30), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Gender, aes(x = end, y = 40, xend = start, yend = 40), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  geom_segment(data = grid_data_Gender, aes(x = end, y = 50, xend = start, yend = 50), colour = "#737373", alpha = 1, linewidth = .4, linetype = 4, inherit.aes = FALSE ) +
-  annotate("text", x = rep(max(Gender$ID), 5), y = c(10, 20, 30, 40, 50), label = c("10%", "20%", "30%", "40%", "50%"), family = "Cormorant", size = 4, fontface = "bold", color = "#737373", angle = 0, hjust = 1) +
-  geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
-  scale_fill_manual(values = c("#e5d8bd", "#fdbf6f"), na.translate = FALSE) +
-  ylim(-90, 70) +
-  theme(panel.background = element_rect(fill = "transparent", color = NA),
-        plot.background = element_rect(fill = "transparent", color = NA),
-        panel.grid = element_blank(),
-        panel.border = element_blank(),
-        plot.margin = unit(c(-2, -2, -2, -7), "cm"),
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(), 
-        axis.ticks = element_blank()) +
-  coord_polar() +
-  geom_text(data = label_data_Gender, aes(x = ID, y = Percentage * 100 + 6, label = Variable, hjust = hjust), family = "Cormorant", size = 5, color = "#737373", fontface = "bold", angle = label_data_Gender$angle, inherit.aes = FALSE ) +
-  geom_segment(data = base_data_Gender, aes(x = start, y = -5, xend = end, yend = -5), colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
+# Runs function to get both Gender plots ~
+make_gender_plot("Membros da SBBE por Estágio Acadêmico & Gênero", "SBBEMembersStats_PT.png", "Variable")
+make_gender_plot("SBBE Members by Academic Stage & Gender", "SBBEMembersStats_EN.png", "Variable_EN")
 
 
-# Overlays plots ~
-Gender_PlotUp <- ggdraw() +
-                 draw_plot(Gender_Plot) + 
-                 draw_plot(Icons, x = .27, y = .31, width = .4, height = .4)
+# Sets custom x-axis labels ~
+xlabel_PT <- c("Per Region" = "Por Região",
+               "Per State" = "Por Estado")
+ylabel_PT <- c("Members" = "% de Afiliados à SBBE",
+               "Attendees" = "% de Participantes no SBBE24")
+xlabel_EN <- c("Members" = "% of SBBE Members",
+               "Attendees" = "% of SBBE24 Attendees")
+ylabel_EN <- c("Members" = "% of SBBE Members",
+               "Attendees" = "% of SBBE24 Attendees")
 
 
-# Create a data frame with text positions
-text <- data.frame(x = c(.2, .4, .6, .8), y = c(.6, .6, .6, .6), 
-                   label = c("Afiliados", "Instituições", "Eventos", "Redes Sociais"))
+# Function to build and save Map plots ~
+make_map_plot <- function(filename, x_labels, y_labels, region_label_column, filter_abroad_only = TRUE) {
+  label_data_abroad <- fulldf_map %>%
+    dplyr::filter(Division == "Per Region", Stats == "Members" & Region != "SBBE24" ) %>%
+    { if (filter_abroad_only) dplyr::filter(., Region == "Abroad") else . }
+  Map <- ggplot() +
+    geom_sf(data = fulldf_map, aes(fill = Percentage * 100), colour = "#f7fbff") +
+    coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+    scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
+              fill = "#FF7B00", colour = "#000000") +
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
+              aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
+              starstroke = .3, colour = "#f7fbff") +
+    geom_text(data = label_data_abroad,
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              size = 4.5, family = "Cormorant", colour = "#000000") +
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              nudge_x = 3.6, nudge_y = -1,
+              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+    scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+                          breaks = c(10, 20, 30, 40, 50),
+                          labels = c("10%", "20%", "30%", "40%", "50%"),
+                          limits = c(0, 60)) +
+    facet_grid(Division ~ Stats, labeller = labeller(Division = x_labels, Stats = y_labels)) +
+    annotation_scale(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members"),
+                     text_family = "Cormorant", location = "bl", line_width = 1.25,
+                     text_cex = 1, style = "ticks",
+                     pad_x = unit(.2, "in"), pad_y = unit(.2, "in")) +
+    annotation_north_arrow(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members"),
+                           location = "bl", which_north = "true", style = north_arrow_fancy_orienteering,
+                           pad_x = unit(.2, "in"), pad_y = unit(.3, "in")) +
+    theme(legend.position = "right",
+          legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
+          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          panel.background = element_rect(fill = "#ffffff"),
+          panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
+          panel.grid = element_blank(),
+          plot.margin = margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
+          plot.title = element_text(family = "Cormorant", size = 120, face = "bold", hjust = .5, margin = margin(b = 13)),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          strip.text = element_text(family = "Cormorant", colour = "#000000", size = 21, face = "bold"),
+          strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
+    guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 18, face = "bold"),
+                                  barwidth = 1.5, barheight = 16, order = 1, frame.linetype = 1,
+                                  frame.colour = "#000000", ticks.colour = "#f7fbff",
+                                  direction = "vertical", reverse = FALSE, even.steps = TRUE,
+                                  draw.ulim = TRUE, draw.llim = TRUE))
 
-numbers_1 <- data.frame(x = c(.2, .4, .6), y = c(.425, .425, .425), label = c("234", "58", "01"))
-numbers_2 <- data.frame(x = c(.8, .8), y = c(.425, .22), label = c("1.932", "100"))
-icons_1 <- data.frame(x = c(.2, .4, .6), y = c(.22, .22, .22), 
-                    label = fontawesome(c("fa-users", "fa-university", "fa-calendar")))
-icons_2 <- data.frame(x = c(.885, .885), y = c(.425, .22), 
-                      label = fontawesome(c("fa-instagram", "fa-twitter")))
-
-
-# Create the plot
-Geral_Plot <- 
-ggplot() +
-  geom_text(data = text, aes(x, y, label = label), color = "#ffffff", size = 10, fontface = "bold", family = "Cormorant") +
-  geom_text(data = numbers_1, aes(x, y, label = label), color = "#ffffff", size = 16, fontface = "bold", family = "Cormorant") +
-  geom_text(data = numbers_2, aes(x, y, label = label), color = "#ffffff", size = 16, fontface = "bold", family = "Cormorant") +
-  geom_text(data = icons_1, aes(x, y, label = label), family = "fontawesome-webfont", size = 12, color = "#ffffff") +
-  geom_text(data = icons_2, aes(x, y, label = label), family = "fontawesome-webfont", size = 12, color = "#ffffff") +
-  annotate("text", x = .5, y = .85, label = "A SBBE em Números", 
-           family = "Cormorant", size = 14, fontface = "bold", color = "#ffffff") +
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  theme(panel.background = element_rect(fill = "#365338", color = NA),
-        plot.background = element_rect(fill = "#365338", color = NA),
-        panel.grid = element_blank(),
-        panel.border = element_blank(),
-        plot.margin = unit(c(0, 0, 0, -1), "cm"),
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(), 
-        axis.ticks = element_blank())
-
-
-# Creates panel ~
-Map <-
-  ggplot() +
-  geom_sf(data = fulldf_map, aes(fill = Percentage * 100), colour = "#f7fbff") +
-  coord_sf(xlim = c(-75.75, -33),
-           ylim = c(-35, 6.5),
-           expand = FALSE) +
-  scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
-  geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
-            aes(x = Longitude, y = Latitude), size = 4, starshape = 15, starstroke = .3, fill = "#FF7B00", colour = "#000000") +
-  geom_star(data = subset(fulldf_map, Division == "Per Region" & Region == "Abroad"),
-            aes(x = Longitude, y = Latitude, fill = Percentage), size = 30, starshape = 8, starstroke = .3, colour = "#f7fbff") +
-  geom_label(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
-             aes(x = Longitude, y = Latitude, label = Region_PT),
-             size = 4.5, label.size = .1, family = "Cormorant", fill = "#f7fbff", colour = "#000000") +
-  geom_label(data = subset(fulldf_map,  Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
-             aes(x = Longitude, y = Latitude, label = Region_PT),
-             size = 4.5, label.size = .1, family = "Cormorant", fill = "#f7fbff", colour = "#000000") +
-  geom_label_repel(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
-                   aes(x = Longitude, y = Latitude, label = Region_PT), point.padding = 0,
-                   nudge_x = 3.6, nudge_y = -1, segment.size = 0, segment.color = NA, 
-                   size = 4.5, label.size = .1, family = "Cormorant", fill = "#FF7B00", colour = "#000000") +
-  scale_fill_continuous(low = "#d6d6d6", high = "#004529",
-                        breaks = c(10, 20, 30, 40, 50),
-                        labels = c("10%", "20%", "30%", "40%", "50%"),
-                        limits = c(0, 60)) +
-  facet_grid(Stats ~ Division, labeller = labeller(Division = xlabel_PT, Stats = ylabel_PT)) +
-  annotation_scale(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"),
-                   text_family = "Cormorant", location = "bl", line_width = 1.25, text_cex = 1, style = "ticks",
-                   pad_x = unit(.2, "in"), pad_y = unit(.2, "in")) +
-  annotation_north_arrow(data = subset(fulldf_map, Division == "Por Região" & Stats == "Members"), 
-                         location = "bl", which_north = "true", style = north_arrow_fancy_orienteering,
-                         pad_x = unit(.2, "in"), pad_y = unit(.3, "in")) +
-  theme(legend.position = "right",
-        legend.margin = margin(t = 0, b = 0, r = 0, l = 30),
-        legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
-        panel.background = element_rect(fill = "#f7fbff"),
-        panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
-        panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
-        plot.margin =  margin(t = 0, b = 0, r = .5, l = .5, unit = "cm"),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank(),
-        strip.text = element_text(family = "Cormorant", colour = "#000000", size = 22, face = "bold"),
-        strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
-  guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 14, face = "bold"),
-                                barwidth = 1.5, barheight = 14, order = 1, frame.linetype = 1, frame.colour = "#000000",
-                                ticks.colour = "#f7fbff", direction = "vertical", reverse = FALSE, even.steps = TRUE,
-                                draw.ulim = TRUE, draw.llim = TRUE))
+ggsave(Map, file = filename, limitsize = FALSE,
+       device = "pdf", scale = 1, width = 12, height = 10.9, dpi = 600)}
 
 
-Final_Panel <- Geral_Plot / (Institution_Plot | Gender_PlotUp) + 
-               plot_layout(heights = c(.4, 1))
+# Runs function to get both Map plots ~
+make_map_plot("SBBEArticleMap_PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
+make_map_plot("SBBEArticleMap_EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
 
 
-# Saves Institution plot ~
-ggsave(Final_Panel, file = "SBBEPanel.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 30, height = 20, dpi = 600)
+# Function to build and save Map plots ~
+make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label_column, filter_abroad_only = TRUE) {
+  label_data_abroad <- fulldf_map %>%
+    dplyr::filter(Division == "Per Region", Stats == "Members" & Region != "SBBE24" ) %>%
+    { if (filter_abroad_only) dplyr::filter(., Region == "Abroad") else . }
+  Map <- ggplot() +
+    geom_sf(data = subset(fulldf_map, Stats == "Members"), aes(fill = Percentage * 100), colour = "#f7fbff") +
+    coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+    scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
+              fill = "#FF7B00", colour = "#000000") +
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
+              aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
+              starstroke = .3, colour = "#f7fbff") +
+    geom_text(data = label_data_abroad,
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              size = 24, family = "Cormorant", fontface = "bold", colour = "#000000") +
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              nudge_x = 3.6, nudge_y = -1,
+              size = 24, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+    labs(title = title_text) +
+    scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+                          breaks = c(10, 20, 30, 40, 50),
+                          labels = c("10%", "20%", "30%", "40%", "50%"),
+                          limits = c(0, 60)) +
+    facet_grid(. ~ Division, labeller = labeller(Division = x_labels, Stats = y_labels)) +
+    theme(legend.position = "right",
+          legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
+          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          panel.background = element_rect(fill = "#ffffff"),
+          panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
+          panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
+          plot.margin = margin(t = 0, b = 0, r = .5, l = .5, unit = "cm"),
+          plot.title = element_text(family = "Cormorant", size = 120, face = "bold", hjust = .5, margin = margin(b = 13)),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          strip.text = element_text(family = "Cormorant", colour = "#000000", size = 86, face = "bold"),
+          strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
+    
+    guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 75, face = "bold"),
+                                  barwidth = 1, barheight = 8, order = 1, frame.linetype = 1,
+                                  frame.colour = "#000000", ticks.colour = "#f7fbff",
+                                  direction = "vertical", reverse = FALSE, even.steps = TRUE,
+                                  draw.ulim = TRUE, draw.llim = TRUE))
+  
+  ggsave(Map, file = filename, limitsize = FALSE,
+         device = "png", scale = 1, width = 9, height = 5, dpi = 600)}
 
-ggsave(Map, file = "SBBEMap.pdf", limitsize = FALSE,
-       device = cairo_pdf, scale = 1, width = 16, height = 8, dpi = 600)
 
+# Runs function to get both Map plots ~
+make_map_plot("% de Membros da SBBE por Região & Estado", "SBBEMembersMap_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
+make_map_plot("% of SBBE Members per Region & State", "SBBEMembersMap_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+  
+
+# Function to build and save Map plots ~
+make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label_column, filter_abroad_only = TRUE) {
+  label_data_abroad <- fulldf_map %>%
+    dplyr::filter(Division == "Per Region", Stats == "Members" & Region != "SBBE24" ) %>%
+    { if (filter_abroad_only) dplyr::filter(., Region == "Abroad") else . }
+  Map <- ggplot() +
+    geom_sf(data = subset(fulldf_map, Stats == "Attendees"), aes(fill = Percentage * 100), colour = "#f7fbff") +
+    coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+    scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
+              fill = "#FF7B00", colour = "#000000") +
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
+              aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
+              starstroke = .3, colour = "#f7fbff") +
+    geom_text(data = label_data_abroad,
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              size = 24, family = "Cormorant", fontface = "bold", colour = "#000000") +
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
+              nudge_x = 3.6, nudge_y = -1,
+              size = 24, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+    labs(title = title_text) +
+    scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+                          breaks = c(10, 20, 30, 40, 50),
+                          labels = c("10%", "20%", "30%", "40%", "50%"),
+                          limits = c(0, 60)) +
+    facet_grid(. ~ Division, labeller = labeller(Division = x_labels, Stats = y_labels)) +
+    theme(legend.position = "right",
+          legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
+          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          panel.background = element_rect(fill = "#ffffff"),
+          panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
+          panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
+          plot.margin = margin(t = 0, b = 0, r = .5, l = .5, unit = "cm"),
+          plot.title = element_text(family = "Cormorant", size = 120, face = "bold", hjust = .5, margin = margin(b = 13)),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          strip.text = element_text(family = "Cormorant", colour = "#000000", size = 86, face = "bold"),
+          strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
+    
+    guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 75, face = "bold"),
+                                  barwidth = 1, barheight = 8, order = 1, frame.linetype = 1,
+                                  frame.colour = "#000000", ticks.colour = "#f7fbff",
+                                  direction = "vertical", reverse = FALSE, even.steps = TRUE,
+                                  draw.ulim = TRUE, draw.llim = TRUE))
+  
+  ggsave(Map, file = filename, limitsize = FALSE,
+         device = "png", scale = 1, width = 9, height = 5, dpi = 600)}
+
+
+# Runs function to get both Map plots ~
+make_map_plot("% de Membros da SBBE por Região & Estado", "SBBEAttendees24Map_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
+make_map_plot("% of SBBE Members per Region & State", "SBBEAttendees24Map_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
 
 #
 ##
