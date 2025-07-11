@@ -12,7 +12,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 
 # Loads packages ~
-pacman::p_load(tidyverse, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, patchwork, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
+pacman::p_load(tidyverse, ggtext, ggstar, ggrepel, shadowtext, readxl, writexl, cowplot, patchwork, ggpubr, lemon, reshape2, writexl, stringr, lubridate,
                geobr, ggspatial, showtext, png, extrafont, sf, ggiraphExtra, fontawesome, shiny, DT,
                rvest, stringr, purrr, tibble, dplyr, extrafont, emojifont, grid, rsvg, ggimage)
 
@@ -25,12 +25,12 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("SBBEmembers--09jul25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("./SBBELists/SBBEmembers--09jul25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
 # Loads data ~
-extra <- read_excel("./Lists/SBBE24_InscriçõesExtraordinárias_R.xlsx")
-normal <- read_excel("./Lists/ListaParticipante_18-12-2024_11-47-55.xlsx") %>%
+extra <- read_excel("./SBBELists/SBBE24_InscriçõesExtraordinárias_R.xlsx")
+normal <- read_excel("./SBBELists/ListaParticipante_18-12-2024_11-47-55.xlsx") %>%
           dplyr::filter(Inscrição == "Aprovado") %>%
           dplyr::filter(Categoria != "Curso Galaxy - Apenas para inscritos no congresso") %>%
           dplyr::filter(!ID %in% extra$ID) %>%
@@ -492,7 +492,7 @@ BRL_States <- add_row(BRL_States, abbrev_state = "Abroad", name_region = "Abroad
 
 # Creates a data frame with the centroids of the Brazilian regions ~
 BRL_Regions_Centroids_df <- data.frame(Region = c("North", "Northeast", "Central-West", "Southeast", "South", "SBBE24", "Abroad", "SP"),
-                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.4, -49.271111, -65, -48.62),
+                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.2, -49.271111, -65, -48.62),
                                        Latitude = c(-3.5, -8, -15.5, -20, -27.5, -25.429722, -25, -21.9))
 
 
@@ -754,17 +754,32 @@ ggsave(Institution_PlotUp, file = filename, limitsize = FALSE,
 
 
 # Runs function to get both Institution plots ~
-make_institution_plot("Instituições Representadas na SBBE", "SBBEMembersInstitution_PT.png", MiniMap_PT)
-make_institution_plot("Institutions Represented in SBBE",   "SBBEMembersInstitution_EN.png", MiniMap_EN)
+#make_institution_plot("Instituições Representadas na SBBE", "./SBBEPlots/SBBEMembersInstitution_PT.png", MiniMap_PT)
+#make_institution_plot("Institutions Represented in SBBE",   "./SBBEPlots/SBBEMembersInstitution_EN.png", MiniMap_EN)
 
 
 # Gets Gender data frame ~
 Gender <- fulldfPlots %>% 
-          filter(Stats == "GenderMembers" | Stats == "StageMembers") %>%
-          droplevels() %>%
-          arrange(desc(Percentage))
+  filter(Stats %in% c("GenderMembers", "StageMembers")) %>%
+  droplevels() %>%
+  arrange(desc(Percentage))
 
 
+# Adds English & bilingual labels  ~
+Gender <- Gender %>%
+  mutate(
+    Variable_EN = case_when(
+      Variable == "Masculino" ~ "Male",
+      Variable == "Feminino" ~ "Female",
+      Variable == "Outro" ~ "Other",
+      Variable == "Profissional" ~ "Professional",
+      Variable == "Pós-graduação" ~ "Postgrad",
+      Variable == "Graduação" ~ "Undergrad", TRUE ~ Variable),
+    Variable_bilingual = paste0("<span style='font-size:62pt; color:#000000;'>", Variable, 
+                                "<span style='font-size:62pt; color:#555555;'><br>", Variable_EN, "</span>"))
+
+
+# Adds empty bars for spacing in circular plot ~
 empty_bar <- 6
 to_add <- data.frame(matrix(NA, empty_bar * nlevels(Gender$Stats), ncol(Gender)))
 colnames(to_add) <- colnames(Gender)
@@ -774,30 +789,7 @@ Gender <- Gender %>% arrange(Stats)
 Gender$ID <- seq(1, nrow(Gender))
 
 
-# Expands BRL_Regions by creating Region ~
-Gender$Variable_EN <- ifelse(Gender$Variable %in% c("Masculino"), "Male",
-                      ifelse(Gender$Variable %in% c("Feminino"), "Female",
-                      ifelse(Gender$Variable %in% c("Outro"), "Other",
-                      ifelse(Gender$Variable %in% c("Profissional"), "Professional",
-                      ifelse(Gender$Variable %in% c("Pós-graduação"), "Post-graduate",
-                      ifelse(Gender$Variable %in% c("Graduação"), "Undergraduate", Gender$Variable))))))
-
-
-label_data_Gender <- Gender
-number_of_bar <- nrow(label_data_Gender)
-angle <- 90 - 360 * (label_data_Gender$ID - .5) / number_of_bar
-label_data_Gender$hjust <- ifelse(angle < -90, 1, 0)
-label_data_Gender$angle <- ifelse(angle < -90, angle + 180, angle)
-
-
-# Expands BRL_Regions by creating Region ~
-label_data_Gender$Variable_EN <- ifelse(Gender$Variable %in% c("Masculino"), "Male",
-                                 ifelse(Gender$Variable %in% c("Feminino"), "Female",
-                                 ifelse(Gender$Variable %in% c("Outro"), "Other",
-                                 ifelse(Gender$Variable %in% c("Profissional"), "Professional",
-                                 ifelse(Gender$Variable %in% c("Pós-graduação"), "Post-graduate",
-                                 ifelse(Gender$Variable %in% c("Graduação"), "Undergraduate", label_data_Gender$Variable))))))
-
+# Computes base and grid data for plot ~
 base_data_Gender <- Gender %>% 
   group_by(Stats) %>% 
   summarize(start = min(ID), 
@@ -805,64 +797,72 @@ base_data_Gender <- Gender %>%
             N = n(), .groups = "drop") %>%
   mutate(end = ifelse(N == 1, start + 1, end)) %>%
   mutate(title = (start + end) / 2)
-
 grid_data_Gender <- base_data_Gender
-grid_data_Gender$end <- grid_data_Gender$end[ c( nrow(grid_data_Gender), 1:nrow(grid_data_Gender) -1)] + 1
+grid_data_Gender$end <- grid_data_Gender$end[ c(nrow(grid_data_Gender), 1:(nrow(grid_data_Gender) - 1)) ] + 1
 grid_data_Gender$start <- grid_data_Gender$start - 1
 grid_data_Gender <- grid_data_Gender[-1, ]
 
 
-# Create a data frame with swapped x, y positions for icons and labels
-data <- data.frame(x = c(.2, .2, .6), y = c(.36, .43, .725), label = fontawesome(c("fa-venus-mars", "fa-genderless", "fa-graduation-cap")))
-text_data <- data.frame(x = c(.2, .6), y = c(.1, .8), label = c("Gênero", "Estágio Acadêmico"))
-
-
-# Function to build and save Gender plots ~
-make_gender_plot <- function(title_text, filename, label_column) {
+# Sets function to plot & save bilingual Stats plot ~
+make_gender_plot <- function(filename, label_column) {
+  number_of_bars <- nrow(Gender)
+  label_data <- Gender %>%
+    filter(Percentage > 0) %>%
+    mutate(
+      angle = 90 - 360 * (ID - 0.5) / nrow(Gender),
+      hjust = ifelse(angle < -90, 1, 0),
+      angle = ifelse(angle < -90, angle + 180, angle),
+      label_y = ifelse(Percentage * 100 > 30, Percentage * 100 + 8, Percentage * 100 + 5))
   Gender_Plot <- ggplot(Gender, aes(x = as.factor(ID), y = Percentage * 100, fill = Stats)) +
     geom_bar(stat = "identity", alpha = 1) +
+    geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), 
+             stat = "identity", alpha = 0.5) +
     geom_segment(data = grid_data_Gender, aes(x = end, y = 10, xend = start, yend = 10), 
-                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                 colour = "#000000", linewidth = 0.25, linetype = 4, inherit.aes = FALSE) +
     geom_segment(data = grid_data_Gender, aes(x = end, y = 20, xend = start, yend = 20), 
-                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                 colour = "#000000", linewidth = 0.25, linetype = 4, inherit.aes = FALSE) +
     geom_segment(data = grid_data_Gender, aes(x = end, y = 30, xend = start, yend = 30), 
-                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                 colour = "#000000", linewidth = 0.25, linetype = 4, inherit.aes = FALSE) +
     geom_segment(data = grid_data_Gender, aes(x = end, y = 40, xend = start, yend = 40), 
-                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                 colour = "#000000", linewidth = 0.25, linetype = 4, inherit.aes = FALSE) +
     geom_segment(data = grid_data_Gender, aes(x = end, y = 50, xend = start, yend = 50), 
-                 colour = "#000000", alpha = 1, linewidth = .25, linetype = 4, inherit.aes = FALSE) +
+                 colour = "#000000", linewidth = 0.25, linetype = 4, inherit.aes = FALSE) +
+    geom_segment(data = base_data_Gender,
+                 aes(x = start, y = -5, xend = end, yend = -5),
+                 colour = "#000000", size = 0.6, inherit.aes = FALSE) +
     annotate("text", x = rep(max(Gender$ID), 5), y = c(10, 20, 30, 40, 50), 
-             label = c("10%", "20%", "30%", "40%", "50%"), family = "Cormorant", size = 22, 
-             fontface = "bold", color = "#000000", hjust = 1) +
-    geom_bar(aes(x = as.factor(ID), y = Percentage * 100, fill = Region), stat = "identity", alpha = .5) +
+             label = c("10%", "20%", "30%", "40%", "50%"), 
+             family = "Cormorant", size = 20, fontface = "bold", color = "#000000", hjust = 1) +
+    ggtext::geom_richtext(data = label_data, 
+                          aes(x = ID, y = label_y, label = .data[[label_column]], 
+                              angle = angle, hjust = hjust),
+                          fill = NA, label.color = NA, 
+                          family = "Cormorant", 
+                          size = 6,
+                          fontface = "bold", 
+                          color = "#000000", 
+                          lineheight = .75,
+                          inherit.aes = FALSE) +
     scale_fill_manual(values = c("#e5d8bd", "#fdbf6f"), na.translate = FALSE) +
+    labs(title = "Membros da SBBE por Estágio Acadêmico & Gênero",
+         subtitle = "SBBE Members by Academic Stage & Gender") +
     ylim(-90, 70) +
-    labs(title = title_text) +
+    coord_polar() +
     theme(panel.background = element_rect(fill = "#ffffff"),
           panel.grid = element_blank(),
           panel.border = element_blank(),
           legend.position = "none",
           plot.title = element_text(family = "Cormorant", size = 100, face = "bold", hjust = .5, margin = margin(t = 10)),
+          plot.subtitle = element_text(family = "Cormorant", size = 100, colour = "#555555", face = "bold", hjust = .5, margin = margin(t = 8.5)),
           axis.text = element_blank(),
           axis.title = element_blank(), 
-          axis.ticks = element_blank()) +
-    coord_polar() +
-    geom_text(data = label_data_Gender, 
-              aes(x = ID, y = Percentage * 100 + 6, 
-                  label = .data[[label_column]], hjust = hjust), 
-              family = "Cormorant", size = 25, color = "#000000", 
-              fontface = "bold", angle = label_data_Gender$angle, inherit.aes = FALSE) +
-    geom_segment(data = base_data_Gender, 
-                 aes(x = start, y = -5, xend = end, yend = -5), 
-                 colour = "#000000", alpha = 1, size = .6, inherit.aes = FALSE)
-  
-  ggsave(Gender_Plot, file = filename, limitsize = FALSE,
+          axis.ticks = element_blank())
+  ggsave(filename, Gender_Plot, limitsize = FALSE,
          device = "png", scale = 1, width = 8, height = 7, dpi = 600)}
 
 
-# Runs function to get both Gender plots ~
-make_gender_plot("Membros da SBBE por Estágio Acadêmico & Gênero", "SBBEMembersStats_PT.png", "Variable")
-make_gender_plot("SBBE Members by Academic Stage & Gender", "SBBEMembersStats_EN.png", "Variable_EN")
+# Applies function ~
+make_gender_plot("./SBBEPlots/SBBEMembersStats.png", "Variable_bilingual")
 
 
 # Sets custom x-axis labels ~
@@ -891,13 +891,13 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
     geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Abroad"),
               aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
               starstroke = .3, colour = "#f7fbff") +
-    geom_text(data = label_data_abroad,
+    geom_label(data = label_data_abroad,
               aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
-              size = 4.5, family = "Cormorant", colour = "#000000") +
+              size = 4.25, family = "Cormorant", colour = "#000000") +
     geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
               nudge_x = 3.6, nudge_y = -1,
-              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+              size = 4.25, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
     scale_fill_continuous(low = "#d6d6d6", high = "#004529",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
@@ -912,7 +912,7 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
                            pad_x = unit(.2, "in"), pad_y = unit(.3, "in")) +
     theme(legend.position = "right",
           legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
-          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          legend.box.margin = margin(t = 0, b = 0, r = 0, l = 0),
           panel.background = element_rect(fill = "#ffffff"),
           panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
           panel.grid = element_blank(),
@@ -924,18 +924,19 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
           strip.text = element_text(family = "Cormorant", colour = "#000000", size = 21, face = "bold"),
           strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
     guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 18, face = "bold"),
-                                  barwidth = 1.5, barheight = 16, order = 1, frame.linetype = 1,
+                                  barwidth = 1.25, barheight = 14, order = 1, frame.linetype = 1,
                                   frame.colour = "#000000", ticks.colour = "#f7fbff",
                                   direction = "vertical", reverse = FALSE, even.steps = TRUE,
                                   draw.ulim = TRUE, draw.llim = TRUE))
 
 ggsave(Map, file = filename, limitsize = FALSE,
-       device = "pdf", scale = 1, width = 12, height = 10.9, dpi = 600)}
+       device = "pdf", scale = 1, width = 12, height = 11, dpi = 600)}
 
 
 # Runs function to get both Map plots ~
-make_map_plot("SBBEArticleMap_PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
-make_map_plot("SBBEArticleMap_EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+make_map_plot("./SBBEPlots/SBBEArticleMap_EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+make_map_plot("./SBBEPlots/SBBEArticleMap_PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
+
 
 
 # Function to build and save Map plots ~
@@ -968,7 +969,7 @@ make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label
     facet_grid(. ~ Division, labeller = labeller(Division = x_labels, Stats = y_labels)) +
     theme(legend.position = "right",
           legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
-          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          legend.box.margin = margin(t = 0, b = 0, r = 0, l = 0),
           panel.background = element_rect(fill = "#ffffff"),
           panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
           panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
@@ -991,8 +992,8 @@ make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label
 
 
 # Runs function to get both Map plots ~
-make_map_plot("% de Membros da SBBE por Região & Estado", "SBBEMembersMap_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
-make_map_plot("% of SBBE Members per Region & State", "SBBEMembersMap_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+make_map_plot("% of SBBE Members per Region & State", "./SBBEPlots/SBBEMembersMap_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+make_map_plot("% de Membros da SBBE por Região & Estado", "./SBBEPlots/SBBEMembersMap_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
   
 
 # Function to build and save Map plots ~
@@ -1025,7 +1026,7 @@ make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label
     facet_grid(. ~ Division, labeller = labeller(Division = x_labels, Stats = y_labels)) +
     theme(legend.position = "right",
           legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
-          legend.box.margin = margin(t = 0, b = 20, r = 0, l = 0),
+          legend.box.margin = margin(t = 0, b = 0, r = 0, l = 0),
           panel.background = element_rect(fill = "#ffffff"),
           panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
           panel.grid.major = element_line(color = "#d9d9d9", linetype = "dashed", linewidth = .00005),
@@ -1048,9 +1049,15 @@ make_map_plot <- function(title_text, filename, x_labels, y_labels, region_label
 
 
 # Runs function to get both Map plots ~
-make_map_plot("% de Membros da SBBE por Região & Estado", "SBBEAttendees24Map_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
-make_map_plot("% of SBBE Members per Region & State", "SBBEAttendees24Map_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+make_map_plot("% de Membros da SBBE por Região & Estado", "./SBBEPlots/SBBEAttendees24Map_PT.png", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "Region_PT", filter_abroad_only = TRUE)
+make_map_plot("% of SBBE Members per Region & State", "./SBBEPlots/SBBEAttendees24Map_EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "Region", filter_abroad_only = FALSE)
+
 
 #
 ##
 ### The END ~~~~~
+
+
+# Create a data frame with swapped x, y positions for icons and labels
+data <- data.frame(x = c(.2, .2, .6), y = c(.36, .43, .725), label = fontawesome(c("fa-venus-mars", "fa-genderless", "fa-graduation-cap")))
+text_data <- data.frame(x = c(.2, .6), y = c(.1, .8), label = c("Gênero", "Estágio Acadêmico"))
