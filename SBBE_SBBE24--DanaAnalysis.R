@@ -949,8 +949,8 @@ Map_Attendees <-
                                   draw.ulim = TRUE, draw.llim = TRUE))
 
 
-# Saves Members Map ~
-ggsave("./SBBEPlots/SBBEAttendeesMap.png",Map_Attendees, limitsize = FALSE,
+# Saves Attendees Map ~
+ggsave("./SBBEPlots/SBBE24AttendeesMap.png",Map_Attendees, limitsize = FALSE,
        device = "png", scale = 1, width = 9, height = 5.5, dpi = 600)
 
 
