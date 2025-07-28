@@ -6,6 +6,8 @@
 
 - [`SBBE_SBBE24--DanaAnalysis.R`](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBE_SBBE24--DanaAnalysis.R)
 
+***
+
 |SBBE Membership Stats|
 |---|
 |![SBBE Membership Stats](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBEPlots/SBBEMembersStats.png)|
@@ -20,4 +22,4 @@
 
 |SBBE24 Attendees Map|
 |---|
-|![SBBE24 Attendees Map](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBEPlots/SBBEAttendeersMap.png)|
+|![SBBE24 Attendees Map](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBEPlots/SBBE24AttendeesMap.png)|
