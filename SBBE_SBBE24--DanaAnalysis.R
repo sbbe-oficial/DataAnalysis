@@ -363,72 +363,72 @@ fulldf_Descriptive <- subset(fulldfUltra, Data == "Members") %>%
 
 # Gets percentage for Institution ~
 fulldf_StageMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
-                           count(Stage) %>%
-                           mutate(Percentage = n / sum(n)) %>%
-                           rename(Variable = Stage) %>%
-                           mutate(Stats = "StageMembers") %>%
-                           mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+                           dplyr::count(Stage) %>%
+                           dplyr::mutate(Percentage = n / sum(n)) %>%
+                           dplyr::rename(Variable = Stage) %>%
+                           dplyr::mutate(Stats = "StageMembers") %>%
+                           dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
 
 
 # Create a data frame with counts and proportions per institution ~
 fulldf_StateMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
-                           count(State) %>%
-                           mutate(Percentage = n / sum(n)) %>%
-                           rename(Variable = State) %>%
+                           dplyr::count(State) %>%
+                           dplyr::mutate(Percentage = n / sum(n)) %>%
+                           dplyr::rename(Variable = State) %>%
                            complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
-                           mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-                           mutate(Stats = "StateMembers")
+                           dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+                           dplyr::mutate(Stats = "StateMembers")
 
 
 # Create a data frame with counts and proportions per institution ~
 fulldf_RegionMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
-                            filter(Region != "Error") %>%
-                            count(Region) %>%
-                            mutate(Percentage = n / sum(n)) %>%
-                            rename(Variable = Region) %>%
+  dplyr::filter(Region != "Error") %>%
+  dplyr::count(Region) %>%
+  dplyr::mutate(Percentage = n / sum(n)) %>%
+  dplyr::rename(Variable = Region) %>%
                             complete(Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
-                            mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-                            mutate(Stats = "RegionMembers")
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+  dplyr::mutate(Stats = "RegionMembers")
 
 
 # Create a data frame with counts and proportions per institution ~
 fulldf_StateAttendeesPerc <- subset(fulldfUltra, Data == "Attendees") %>%
-                             count(State) %>%
-                             mutate(Percentage = n / sum(n)) %>%
-                             rename(Variable = State) %>%
-                             complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
-                             mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-                             mutate(Stats = "StateAttendees")
+  dplyr::count(State) %>%
+  dplyr::mutate(Percentage = n / sum(n)) %>%
+  dplyr::rename(Variable = State) %>%
+  complete(Variable = AllBRLStates, fill = list(n = 0, Percentage = 0)) %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+  dplyr::mutate(Stats = "StateAttendees")
 
 
 # Create a data frame with counts and proportions per institution ~
 fulldf_RegionAttendeesPerc <- subset(fulldfUltra, Data == "Attendees") %>%
-                              filter(Region != "Error") %>%
-                              count(Region) %>%
-                              mutate(Percentage = n / sum(n)) %>%
-                              rename(Variable = Region) %>%
+  dplyr::filter(Region != "Error") %>%
+  dplyr::count(Region) %>%
+  dplyr::mutate(Percentage = n / sum(n)) %>%
+  dplyr::rename(Variable = Region) %>%
                               complete(Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
-                              mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-                              mutate(Stats = "RegionAttendees")
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+  dplyr::mutate(Stats = "RegionAttendees")
 
 
 # Gets percentage for Gender ~
 fulldf_GenderMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
-                            filter(Region != "Error") %>%
-                            count(Gender) %>%
-                            mutate(Percentage = n / sum(n)) %>%
-                            rename(Variable = Gender) %>%
-                            mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
-                            mutate(Stats = "GenderMembers")
+  dplyr::filter(Region != "Error") %>%
+  dplyr::count(Gender) %>%
+  dplyr::mutate(Percentage = n / sum(n)) %>%
+  dplyr::rename(Variable = Gender) %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE)) %>%
+  dplyr::mutate(Stats = "GenderMembers")
 
 
 fulldf_InstitutionMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
-                                 filter(Institution != "") %>%
-                                 count(Institution, Region) %>%
-                                 mutate(Percentage = n / sum(n)) %>%
-                                 rename(Variable = Institution) %>%
-                                 mutate(Stats = "InstitutionMembers") %>%
-                                 mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
+  dplyr::filter(Institution != "") %>%
+  dplyr::count(Institution, Region) %>%
+  dplyr::mutate(Percentage = n / sum(n)) %>%
+  dplyr::rename(Variable = Institution) %>%
+  dplyr::mutate(Stats = "InstitutionMembers") %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE))
 
 
 # Combine the data frames ~  
@@ -950,8 +950,32 @@ Map_Attendees <-
 
 
 # Saves Attendees Map ~
-ggsave("./SBBEPlots/SBBE24AttendeesMap.png",Map_Attendees, limitsize = FALSE,
+ggsave("./SBBEPlots/SBBE24AttendeesMap.png", Map_Attendees, limitsize = FALSE,
        device = "png", scale = 1, width = 9, height = 5.5, dpi = 600)
+
+
+# Creates Article Map ~
+Map_Article <-
+  ggplot() +
+  geom_sf(data = subset(fulldf_map, Stats == "Attendees" & Division == "Per Region"), fill = "#ffffff", colour = "#000000") +
+  coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
+  scale_y_continuous(breaks = c(0, -10, -20, -30)) +
+  facet_grid(. ~ Division, labeller = labeller(Division = ~ unique(fulldf_map$Division_Bilingual[match(.x, fulldf_map$Division)]))) +
+  theme(plot.margin = margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
+        panel.background = element_rect(fill = "#ffffff"),
+        panel.border = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "none",
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        strip.text = element_blank())
+
+
+# Saves Article Map ~
+ggsave("./SBBEPlots/ArticleMap.pdf", Map_Article, limitsize = FALSE,
+       device = "pdf", scale = 1, width = 8, height = 8, dpi = 600)
 
 
 # Sets custom x-axis labels ~
@@ -971,7 +995,7 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
     dplyr::filter(Division == "Per Region", Stats == "Members" & Region != "SBBE24" ) %>%
     { if (filter_abroad_only) dplyr::filter(., Region == "Exterior") else . }
   Map <- ggplot() +
-    geom_sf(data = fulldf_map, aes(fill = Percentage * 100), colour = "#f7fbff") +
+    geom_sf(data = subset(fulldf_map, Division == "Per Region"), aes(fill = Percentage * 100), colour = "#f7fbff") +
     coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
     scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
     geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
@@ -982,11 +1006,11 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
               starstroke = .3, colour = "#f7fbff") +
     geom_label(data = label_data_abroad,
               aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
-              size = 4.25, family = "Cormorant", colour = "#000000") +
+              size = 4.5, family = "Cormorant", colour = "#000000") +
     geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude, label = Region),
               nudge_x = 3.6, nudge_y = -1,
-              size = 4.25, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
     scale_fill_continuous(low = "#d6d6d6", high = "#004529",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
@@ -1000,7 +1024,7 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
                            location = "bl", which_north = "true", style = north_arrow_fancy_orienteering,
                            pad_x = unit(.2, "in"), pad_y = unit(.3, "in")) +
     theme(legend.position = "right",
-          legend.margin = margin(t = 0, b = 0, r = 0, l = 20),
+          legend.margin = margin(t = 0, b = 0, r = 0, l = 12),
           legend.box.margin = margin(t = 0, b = 0, r = 0, l = 0),
           panel.background = element_rect(fill = "#ffffff"),
           panel.border = element_rect(colour = "#000000", linewidth = .25, fill = NA),
@@ -1011,7 +1035,7 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
           axis.ticks = element_blank(),
           strip.text = element_text(family = "Cormorant", colour = "#000000", size = 21, face = "bold"),
           strip.background = element_rect(colour = "#000000", fill = "#d6d6d6", linewidth = .25)) +
-    guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 18, face = "bold"),
+    guides(fill = guide_colourbar(title = "", label.theme = element_text(family = "Cormorant", size = 15, face = "bold"),
                                   barwidth = 1.25, barheight = 14, order = 1, frame.linetype = 1,
                                   frame.colour = "#000000", ticks.colour = "#f7fbff",
                                   direction = "vertical", reverse = FALSE, even.steps = TRUE,
@@ -1019,7 +1043,7 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
 
 
 ggsave(Map, file = filename, limitsize = FALSE,
-       device = "pdf", scale = 1, width = 12, height = 11, dpi = 600)}
+       device = "pdf", scale = 1, width = 12.25, height = 6, dpi = 600)}
 
 
 # Runs function to get both Article Map plots ~
