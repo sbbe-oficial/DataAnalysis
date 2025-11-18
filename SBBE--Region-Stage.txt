@@ -1,0 +1,19 @@
+Stage	Variable	n	Percentage
+Estudante de Graduação	Centro-Oeste	20	10.5820105820106
+Estudante de Graduação	Exterior	16	8.46560846560847
+Estudante de Graduação	Nordeste	12	6.34920634920635
+Estudante de Graduação	Norte	0	0
+Estudante de Graduação	Sudeste	57	30.1587301587302
+Estudante de Graduação	Sul	84	44.4444444444444
+Mestrando, Doutorando e Pós doutorando	Centro-Oeste	18	5.8252427184466
+Mestrando, Doutorando e Pós doutorando	Exterior	9	2.9126213592233
+Mestrando, Doutorando e Pós doutorando	Nordeste	18	5.8252427184466
+Mestrando, Doutorando e Pós doutorando	Norte	6	1.94174757281553
+Mestrando, Doutorando e Pós doutorando	Sudeste	140	45.3074433656958
+Mestrando, Doutorando e Pós doutorando	Sul	118	38.1877022653722
+Profissional	Centro-Oeste	19	12.1019108280255
+Profissional	Exterior	7	4.45859872611465
+Profissional	Nordeste	20	12.7388535031847
+Profissional	Norte	3	1.91082802547771
+Profissional	Sudeste	65	41.4012738853503
+Profissional	Sul	43	27.3885350318471

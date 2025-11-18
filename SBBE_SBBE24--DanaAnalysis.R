@@ -412,6 +412,28 @@ fulldf_RegionAttendeesPerc <- subset(fulldfUltra, Data == "Attendees") %>%
   dplyr::mutate(Stats = "RegionAttendees")
 
 
+fulldfUltra <- fulldfUltra %>% dplyr::mutate(Stage = gsub(" \\+ Membro fundador da SBBE", "", Stage))
+
+
+fulldf_StageRegionAttendeesPerc_Matheus <- fulldfUltra %>%
+  dplyr::filter(Data == "Attendees", Region != "Error", !str_detect(Stage, "Sem inscrição no SBBE24")) %>%
+  dplyr::count(Stage, Region) %>%
+  dplyr::group_by(Stage) %>%
+  dplyr::mutate(Percentage = (n / sum(n)) * 100) %>%
+  dplyr::ungroup() %>%
+  dplyr::rename(Variable = Region) %>%
+  tidyr::complete(Stage, Variable = AllBRLRegions, fill = list(n = 0, Percentage = 0)) %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variable_levels, ordered = TRUE), 
+                Stats = "StageRegionAttendees") %>%
+  dplyr::select(Stage, Variable, n, Percentage)
+
+
+# Saves the lists of Focal Genes ~
+write.table(fulldf_StageRegionAttendeesPerc_Matheus, file = "SBBE--Region-Stage.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+  
+  
+
+
 # Gets percentage for Gender ~
 fulldf_GenderMembersPerc <- subset(fulldfUltra, Data == "Members") %>%
   dplyr::filter(Region != "Error") %>%
@@ -473,16 +495,17 @@ BRL_Regions$Region <- ifelse(BRL_Regions$name_region %in% c("Norte"), "North",
 
 # Expands BRL_Regions by adding the SBBE24 & Abroad rows ~
 BRL_Regions <- add_row(BRL_Regions, name_region = "SBBE24", Region = "SBBE24")
+BRL_Regions <- add_row(BRL_Regions, name_region = "SBBE26", Region = "SBBE26")
 BRL_Regions <- add_row(BRL_Regions, name_region = "Exterior", Region = "Exterior")
 BRL_States <- add_row(BRL_States, abbrev_state = "Exterior", name_region = "Exterior")
 
 
 # Creates a data frame with the centroids of the Brazilian regions ~
-BRL_Regions_Centroids_df <- data.frame(Region = c("North", "Northeast", "Central-West", "Southeast", "South", "SBBE24", "Exterior", "SP"),
-                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.2, -49.271111, -65, -48.62),
-                                       Latitude = c(-3.5, -8, -15.5, -20, -27.5, -25.429722, -25, -21.9))
+BRL_Regions_Centroids_df <- data.frame(Region = c("North", "Northeast", "Central-West", "Southeast", "South", "SBBE24", "SBBE26", "Exterior", "SP"),
+                                       Longitude = c(-58, -41.25, -53.15, -44.85, -51.2, -49.271111, -43.964837, -65, -48.62),
+                                       Latitude = c(-3.5, -8, -15.5, -20, -27.5, -25.429722, -19.872538, -25, -21.9))
 
-
+ 
 # Merges data frame to perform the change ~
 BRL_Regions <- left_join(BRL_Regions, BRL_Regions_Centroids_df, by = "Region")
 
@@ -531,6 +554,9 @@ combined_sfs <- bind_rows(StateAttendees_df, StateMembers_df, RegionAttendees_df
 
 # Expands combined_sfs by adding the SBBE24 row ~
 combined_sfs <- add_row(combined_sfs, name_region = "SBBE24", Division = "Per Region", Stats = "Members")
+combined_sfs <- add_row(combined_sfs, name_region = "SBBE26", Division = "Per Region", Stats = "Members")
+combined_sfs <- add_row(combined_sfs, name_region = "SBBE24", Division = "Per Region", Stats = "Attendees")
+combined_sfs <- add_row(combined_sfs, name_region = "SBBE26", Division = "Per Region", Stats = "Attendees")
 
 
 # Converts to data frames ~
@@ -726,14 +752,13 @@ Gender <- fulldfPlots %>%
 
 # Adds English & bilingual labels  ~
 Gender <- Gender %>%
-  mutate(
-    Variable_EN = case_when(
-      Variable == "Masculino" ~ "Male",
-      Variable == "Feminino" ~ "Female",
-      Variable == "Outro" ~ "Other",
-      Variable == "Profissional" ~ "Professional",
-      Variable == "Pós-graduação" ~ "Postgrad",
-      Variable == "Graduação" ~ "Undergrad", TRUE ~ Variable),
+  mutate(Variable_EN = case_when(
+         Variable == "Masculino" ~ "Male",
+         Variable == "Feminino" ~ "Female",
+         Variable == "Outro" ~ "Other",
+         Variable == "Profissional" ~ "Professional",
+         Variable == "Pós-graduação" ~ "Postgrad",
+         Variable == "Graduação" ~ "Undergrad", TRUE ~ Variable),
     Variable_Bilingual_1 = paste0("<span style='font-size:62pt; color:#000000;'>", Variable, 
                                 "<span style='font-size:62pt; color:#555555;'><br>", Variable_EN, "</span>"))
 
@@ -845,10 +870,17 @@ Map_Members <-
     geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
               fill = "#FF7B00", colour = "#000000") +
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE26"),
+              aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
+              fill = "#FF7B00", colour = "#000000") +
     geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Exterior"),
               aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
               starstroke = .3, colour = "#f7fbff") +
     geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+              aes(x = Longitude, y = Latitude, label = Region),
+              nudge_x = 3.6, nudge_y = -1,
+              size = 24, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE26"),
               aes(x = Longitude, y = Latitude, label = Region),
               nudge_x = 3.6, nudge_y = -1,
               size = 24, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
@@ -954,30 +986,6 @@ ggsave("./SBBEPlots/SBBE24AttendeesMap.png", Map_Attendees, limitsize = FALSE,
        device = "png", scale = 1, width = 9, height = 5.5, dpi = 600)
 
 
-# Creates Article Map ~
-Map_Article <-
-  ggplot() +
-  geom_sf(data = subset(fulldf_map, Stats == "Attendees" & Division == "Per Region"), fill = "#ffffff", colour = "#000000") +
-  coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
-  scale_y_continuous(breaks = c(0, -10, -20, -30)) +
-  facet_grid(. ~ Division, labeller = labeller(Division = ~ unique(fulldf_map$Division_Bilingual[match(.x, fulldf_map$Division)]))) +
-  theme(plot.margin = margin(t = 0, b = 0, r = 0, l = 0, unit = "cm"),
-        panel.background = element_rect(fill = "#ffffff"),
-        panel.border = element_blank(),
-        panel.grid = element_blank(),
-        legend.position = "none",
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.line = element_blank(),
-        axis.ticks = element_blank(),
-        strip.text = element_blank())
-
-
-# Saves Article Map ~
-ggsave("./SBBEPlots/ArticleMap.pdf", Map_Article, limitsize = FALSE,
-       device = "pdf", scale = 1, width = 8, height = 8, dpi = 600)
-
-
 # Sets custom x-axis labels ~
 xlabel_PT <- c("Per Region" = "Por Região",
                "Per State" = "Por Estado")
@@ -998,19 +1006,26 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
     geom_sf(data = subset(fulldf_map, Division == "Per Region"), aes(fill = Percentage * 100), colour = "#f7fbff") +
     coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
     scale_y_continuous(breaks = c(0, -10, -20, -30)) + 
-    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
-              fill = "#FF7B00", colour = "#000000") +
+              fill = "#365338", colour = "#000000") +
+    geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE26"),
+              aes(x = Longitude, y = Latitude), size = 2.8, starshape = 15, starstroke = .3,
+              fill = "#e67033", colour = "#000000") +
     geom_star(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "Exterior"),
               aes(x = Longitude, y = Latitude, fill = Percentage), size = 25, starshape = 8,
               starstroke = .3, colour = "#f7fbff") +
     geom_label(data = label_data_abroad,
               aes(x = Longitude, y = Latitude, label = .data[[region_label_column]]),
               size = 4.5, family = "Cormorant", colour = "#000000") +
-    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region == "SBBE24"),
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude, label = Region),
-              nudge_x = 3.6, nudge_y = -1,
-              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#FF7B00") +
+              nudge_x = 3, nudge_y = -1,
+              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#365338") +
+    geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE26"),
+              aes(x = Longitude, y = Latitude, label = Region),
+              nudge_x = -3, nudge_y = -1,
+              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#e67033") +
     scale_fill_continuous(low = "#d6d6d6", high = "#004529",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
