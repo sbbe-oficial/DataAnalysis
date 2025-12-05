@@ -6,9 +6,13 @@
 
 ***
 
-| SBBE Article Map |
+|SBBE Article Map (Figure 1)|
+|---|
+|![SBBE Article Map (Figure 1)](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBEPlots/SBBEArticleMap_1-EN.png)|
+
+|SBBE Article Map (Figure 2)|
 |------------------|
-| [![SBBE Article Map](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_EN.png)](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_EN.pdf)|
+| [![SBBE Article Map (Figure 2)](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_2-EN.png)](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_2-EN.pdf)|
 
 |SBBE Membership Stats|
 |---|
