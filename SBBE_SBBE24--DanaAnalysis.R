@@ -1020,12 +1020,12 @@ make_map_plot <- function(filename, x_labels, y_labels, region_label_column, fil
               size = 4.5, family = "Cormorant", colour = "#000000") +
     geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE24"),
               aes(x = Longitude, y = Latitude, label = Region),
-              nudge_x = 3, nudge_y = -1,
-              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#365338") +
+              nudge_x = 3.25, nudge_y = -1,
+              size = 5, family = "Cormorant", fontface = "bold", colour = "#365338") +
     geom_text(data = subset(fulldf_map, Division == "Per Region" & Stats == "Attendees" & Region == "SBBE26"),
               aes(x = Longitude, y = Latitude, label = Region),
-              nudge_x = -3, nudge_y = -1,
-              size = 4.5, family = "Cormorant", fontface = "bold", colour = "#e67033") +
+              nudge_x = -3.25, nudge_y = -1,
+              size = 5, family = "Cormorant", fontface = "bold", colour = "#e67033") +
     scale_fill_continuous(low = "#d6d6d6", high = "#004529",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
