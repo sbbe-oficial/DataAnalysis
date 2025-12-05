@@ -1,11 +1,18 @@
 # _SBBE Data Analysis_
 
-##### Code repository for analyses concerning [SBBE](https://www.sbbevol.org/en) membership data as well as [SBBE24](https://www.sbbevol.org/en/congressos) attendance.
-##### All this is achieved through the single R code below:
+##### R script for analysing the data concerning both [SBBE](https://www.sbbevol.org/en) membership and [SBBE24](https://www.sbbevol.org/en/congressos) attendance. In addition, this R script also generates the maps presented in Pacheco _et al._ 2026.
 
 - [`SBBE_SBBE24--DanaAnalysis.R`](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBE_SBBE24--DanaAnalysis.R)
 
 ***
+
+| SBBE Article Map |
+|------------------|
+| [![SBBE Article Map](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_EN.png)](https://raw.githubusercontent.com/sbbe-oficial/DataAnalysis/main/SBBEPlots/SBBEArticleMap_EN.pdf)|
+
+|SBBE Membership Stats|
+|---|
+|![SBBE Membership Stats](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBEPlots/SBBEMembersStats.png)|
 
 |SBBE Membership Stats|
 |---|
