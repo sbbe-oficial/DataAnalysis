@@ -1,8 +1,6 @@
 # _SBBE Data Analysis_
 
-##### Code repository for analyses concerning both [SBBE](https://www.sbbevol.org/en) membership and [SBBE24](https://www.sbbevol.org/en/congressos) attendance.
-
-##### All this is achieved through the single R code below:
+##### R script for analysing the data concerning both [SBBE](https://www.sbbevol.org/en) membership and [SBBE24](https://www.sbbevol.org/en/congressos) attendance.
 
 - [`SBBE_SBBE24--DanaAnalysis.R`](https://github.com/sbbe-oficial/DataAnalysis/blob/main/SBBE_SBBE24--DanaAnalysis.R)
 
