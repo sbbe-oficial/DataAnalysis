@@ -26,7 +26,7 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("./SBBELists/SBBEmembers--09jul25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("./SBBELists/SBBEmembers--12dec25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
 # Loads data ~
@@ -229,9 +229,12 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Seguidores no Instagram",
                      "Instituições representadas na SBBE",
                      "Afiliados à SBBE",
+                     "Novartis",
                      "Okinawa Inst. of Science and Technology",
                      "Uni. of Ottawa",
                      "Pennsylvania State Uni.",
+                     "Towson Uni.",
+                     "Southwest Uni.",
                      "Uni. of Texas",
                      "Texas A&M Uni.",
                      "Uni. of California — Los Angeles",
@@ -239,7 +242,9 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. of West Florida",
                      "Uni. of Aberdeen",
                      "Uni. of Oslo",
+                     "Uni. of Gothenburg",
                      "Uni. of Copenhagen",
+                     "Leibniz Inst. For Zoo and Wildlife Research",
                      "Uni. Nacional de Misiones",
                      "Uni. Nacional de Trujillo",
                      "Inst. de Biología Subtropical",
@@ -248,6 +253,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. de Buenos Aires",
                      "Uni. Federal de Santa Maria",
                      "Uni. Federal do Rio Grande",
+                     "Uni. Federal Rural do Semi-Árido",
                      "Uni. Federal de Pelotas",
                      "Uni. Federal de Ciências da Saúde de Porto Alegre",
                      "Uni. Federal do Rio Grande do Sul",
@@ -285,7 +291,9 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Estadual do Norte Fluminense Darcy Ribeiro",
                      "Inst. Oswaldo Cruz",
                      "Uni. Federal do Rio de Janeiro",
+                     "Museu Nacional",
                      "Uni. do Estado do Rio de Janeiro",
+                     "Centro Universitário Serra Dos Órgãos",
                      "Uni. Federal do Espírito Santo",
                      "Inst. Nacional da Mata Atlântica",
                      "Pontifícia Uni. Católica de Minas Gerais",
@@ -318,13 +326,16 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. de Pernambuco",
                      "Inst. Aggeu Magalhães — Fiocruz Pernambuco",
                      "Inst. Federal — Pernambuco",
+                     "Inst. Federal — do Sul de Minas",
                      "Uni. Federal de Pernambuco",
                      "Uni. Estadual da Paraíba",
                      "Uni. Federal da Paraíba",
                      "Uni. Federal do Rio Grande do Norte",
                      "Museu Paraense Emílio Goeldi",
+                     "Uni. Federal do Amapá",
                      "Uni. Federal do Pará",
                      "Inst. Nacional de Pesquisas da Amazônia",
+                     "Uni. Federal de Roraima",
                      "Uni. Federal do Amazonas",
                      "Feminino",
                      "Masculino",
@@ -431,8 +442,6 @@ fulldf_StageRegionAttendeesPerc_Matheus <- fulldfUltra %>%
 
 # Saves the lists of Focal Genes ~
 write.table(fulldf_StageRegionAttendeesPerc_Matheus, file = "SBBE--Region-Stage.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-  
-  
 
 
 # Gets percentage for Gender ~
@@ -1124,7 +1133,7 @@ Map_Article_White <-
 
 
 # Saves Article Map ~
-ggsave("./SBBEPlots/SBBEArticleMap_1-EN.png", Map_Article_White,
+ggsave("./SBBEPlots/SBBEArticleMap_Fig1-EN.png", Map_Article_White,
        device = "png", bg = "transparent", limitsize = FALSE, scale = 1, width = 8, height = 8, dpi = 1000)
 
 
@@ -1228,9 +1237,9 @@ else {ggsave(filename,
   
 
 # Runs function to get the Article Map in different flavour ~ 
-make_map_plot("./SBBEPlots/SBBEArticleMap_2-EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "png")
-make_map_plot("./SBBEPlots/SBBEArticleMap_2-EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "pdf")
-make_map_plot("./SBBEPlots/SBBEArticleMap_2-PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "name_region", filter_abroad_only = TRUE, format = "pdf")
+make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "png")
+make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "pdf")
+make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "name_region", filter_abroad_only = TRUE, format = "pdf")
 
 
 #
