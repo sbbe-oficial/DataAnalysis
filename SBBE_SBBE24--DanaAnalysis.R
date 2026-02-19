@@ -26,7 +26,7 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("./SBBELists/SBBEmembers--12dec25.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("./SBBELists/SBBEmembers--13Feb26.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
 # Loads data ~
@@ -233,6 +233,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Okinawa Inst. of Science and Technology",
                      "Uni. of Ottawa",
                      "Pennsylvania State Uni.",
+                     "Southwestern Oklahoma State Uni.",
                      "Towson Uni.",
                      "Southwest Uni.",
                      "Uni. of Texas",
@@ -265,7 +266,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Museu de História Natural Capão da Imbuia",
                      "Inst. Carlos Chagas — Fiocruz Paraná",
                      "Uni. Estadual de Ponta Grossa",
-                     "Uni. Estadual do Centro-Oeste do Paraná",
+                     "Uni. Estadual do Centro-Oeste",
                      "Secretaria de Educação do Estado do Paraná",
                      "Inst. Federal — Paraná",
                      "Uni. Tecnológica Federal do Paraná",
@@ -289,13 +290,16 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Estadual Paulista",
                      "Unisãojosé",
                      "Uni. Estadual do Norte Fluminense Darcy Ribeiro",
+                     "Uni. Federal Fluminense",
                      "Inst. Oswaldo Cruz",
                      "Uni. Federal do Rio de Janeiro",
+                     "Uni. Federal do Estado do Rio de Janeiro",
                      "Museu Nacional",
                      "Uni. do Estado do Rio de Janeiro",
                      "Centro Universitário Serra Dos Órgãos",
                      "Uni. Federal do Espírito Santo",
                      "Inst. Nacional da Mata Atlântica",
+                     "Colégio Águia de Prata",
                      "Pontifícia Uni. Católica de Minas Gerais",
                      "Uni. Federal de Uberlândia", 
                      "Uni. Federal do Triângulo Mineiro",
@@ -330,10 +334,12 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Federal de Pernambuco",
                      "Uni. Estadual da Paraíba",
                      "Uni. Federal da Paraíba",
+                     "Secretaria Municipal de Educação",
                      "Uni. Federal do Rio Grande do Norte",
                      "Museu Paraense Emílio Goeldi",
                      "Uni. Federal do Amapá",
                      "Uni. Federal do Pará",
+                     "Inst. Tecnológico Vale",
                      "Inst. Nacional de Pesquisas da Amazônia",
                      "Uni. Federal de Roraima",
                      "Uni. Federal do Amazonas",
@@ -729,8 +735,8 @@ Institutions_Plot <- ggplot(Circular, aes(x = as.factor(ID), y = Percentage * 10
                            panel.grid = element_blank(),
                            panel.border = element_blank(),
                            legend.position = "none",
-                           plot.title = element_text(family = "Cormorant", size = 250, face = "bold", hjust = .5, margin = margin(t = 30)),
-                           plot.subtitle = element_text(family = "Cormorant", size = 250, colour = "#555555", face = "bold", hjust = .5, margin = margin(t = 20)),
+                           plot.title = element_text(family = "Cormorant", size = 250, face = "bold", hjust = .5, margin = margin(t = 22)),
+                           plot.subtitle = element_text(family = "Cormorant", size = 250, colour = "#555555", face = "bold", hjust = .5, margin = margin(t = 12)),
                            axis.text = element_blank(),
                            axis.title = element_blank(), 
                            axis.ticks = element_blank()) +
@@ -1002,7 +1008,7 @@ brazil <- read_country(year = 2019, simplified = TRUE)
 
 
 # Loads Amazonian rivers shape file ~
-rivers_world <- st_read("./SHPs/RiosAmazonicosGeorge.shp")
+rivers_world <- st_read("./SHPs/AmazonicRivers/RiosAmazonicosGeorge.shp")
 
 
 # Make sure CRS matches ~
@@ -1186,7 +1192,7 @@ Map <- ggplot() +
                   aes(x = Longitude, y = Latitude, label = Region),
                   nudge_x = -3.5, nudge_y = -1,
                   size = 4.5, family = "Cormorant", colour = "#e67033") +
-       scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+       scale_fill_continuous(low = "#ece7f2", high = "#023858",
                              breaks = c(10, 20, 30, 40, 50),
                              labels = c("10%", "20%", "30%", "40%", "50%"),
                              limits = c(0, 60)) +
@@ -1237,9 +1243,11 @@ else {ggsave(filename,
   
 
 # Runs function to get the Article Map in different flavour ~ 
-make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "png")
 make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-EN.pdf", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "pdf")
 make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-PT.pdf", x_labels = xlabel_PT, y_labels = ylabel_PT, region_label_column = "name_region", filter_abroad_only = TRUE, format = "pdf")
+make_map_plot("./SBBEPlots/SBBEArticleMap_Fig2-EN.png", x_labels = xlabel_EN, y_labels = ylabel_EN, region_label_column = "name_region_EN", filter_abroad_only = FALSE, format = "png")
+
+
 
 
 #
