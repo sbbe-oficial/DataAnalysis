@@ -26,7 +26,7 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("./SBBELists/SBBEmembers--13Feb26.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("./SBBELists/SBBEmembers--19Feb26.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
 # Loads data ~
