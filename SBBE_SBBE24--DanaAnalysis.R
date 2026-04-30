@@ -716,7 +716,7 @@ MiniMap_Bilingual <- ggplot() +
             aes(x = Longitude, y = Latitude, fill = name_region), 
             size = 30, starshape = 8, starstroke = .3, colour = "#f7fbff") +
   scale_fill_manual(values = c("#1b9e77", "#fdb462", "#fb8072", "#bebada", "#80b1d3", "#c994c7")) +
-  ggtext::geom_richtext(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24"),
+  ggtext::geom_richtext(data = subset(fulldf_map, Division == "Per Region" & Stats == "Members" & Region != "SBBE24" & Region != "SBBE26"),
                         aes(x = Longitude, y = Latitude, label = name_region_Bilingual),
                         family = "Cormorant", fontface = "bold", size = 8, colour = "#000000", fill = NA, label.color = NA, lineheight = .55) +
   coord_sf(xlim = c(-75.75, -33), ylim = c(-35, 6.5), expand = FALSE) +
