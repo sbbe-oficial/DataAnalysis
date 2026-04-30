@@ -26,7 +26,7 @@ showtext_auto()
 
 
 # Loads data ~
-fulldf <- read.csv("./SBBELists/SBBEmembers--19Feb26.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
+fulldf <- read.csv("./SBBELists/SBBEmembers--29Apr26.csv", header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
 
 # Loads data ~
@@ -186,7 +186,7 @@ fulldfUltra$Gender <- ifelse(fulldfUltra$Gender %in% c("M", "Masculino"), "Mascu
 # Defines the custom capitalization function ~
 capitalize_words <- function(text) {
                     words <- str_split(text, " ")[[1]]
-                    exclude_patterns <- c("of", "de", "da", "do", "ABC", "Não-binário", "and", "(EUA)")
+                    exclude_patterns <- c("of", "de", "da", "do", "ABC", "Não-binário", "and", "(EUA)", "del-Rei", "UNIFATECIE")
                     patterns_map <- setNames(exclude_patterns, tolower(exclude_patterns))
                     words <- sapply(words, function(word) {
                     word_lower <- tolower(word)
@@ -231,9 +231,11 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Afiliados à SBBE",
                      "Novartis",
                      "Okinawa Inst. of Science and Technology",
+                     "École Polytechnique Fédérale de Lausanne", 
                      "Uni. of Ottawa",
                      "Pennsylvania State Uni.",
                      "Southwestern Oklahoma State Uni.",
+                     "The City Uni. of New York",
                      "Towson Uni.",
                      "Southwest Uni.",
                      "Uni. of Texas",
@@ -247,6 +249,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. of Copenhagen",
                      "Leibniz Inst. For Zoo and Wildlife Research",
                      "Uni. Nacional de Misiones",
+                     "Uni. Nacional de Colombia", 
                      "Uni. Nacional de Trujillo",
                      "Inst. de Biología Subtropical",
                      "Inst. Multidisciplinario de Biología Vegetal",
@@ -265,6 +268,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uningá",
                      "Museu de História Natural Capão da Imbuia",
                      "Inst. Carlos Chagas — Fiocruz Paraná",
+                     "Centro Universitário UNIFATECIE",
                      "Uni. Estadual de Ponta Grossa",
                      "Uni. Estadual do Centro-Oeste",
                      "Secretaria de Educação do Estado do Paraná",
@@ -286,6 +290,7 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Uni. Federal do ABC",
                      "Uni. Federal de São Paulo",
                      "Uni. de São Paulo",
+                     "Inst. Biológico — São Paulo", 
                      "Uni. Estadual de Campinas",
                      "Uni. Estadual Paulista",
                      "Unisãojosé",
@@ -294,6 +299,9 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Inst. Oswaldo Cruz",
                      "Uni. Federal do Rio de Janeiro",
                      "Uni. Federal do Estado do Rio de Janeiro",
+                     "Uni. Estadual do Norte Fluminense", 
+                     "Fundação Oswaldo Cruz — Rio de Janeiro",
+                     "Jardim Botânico do Rio de Janeiro",
                      "Museu Nacional",
                      "Uni. do Estado do Rio de Janeiro",
                      "Centro Universitário Serra Dos Órgãos",
@@ -301,14 +309,16 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Inst. Nacional da Mata Atlântica",
                      "Colégio Águia de Prata",
                      "Pontifícia Uni. Católica de Minas Gerais",
-                     "Uni. Federal de Uberlândia", 
+                     "Uni. Federal de Uberlândia",
+                     "Uni. Federal de Itajubá",
                      "Uni. Federal do Triângulo Mineiro",
                      "Uni. Federal de Juiz de Fora",
+                     "Centro Universitário de Patos de Minas",
                      "Uni. do Estado de Minas Gerais",
                      "Uni. Federal de Minas Gerais",
                      "Uni. Federal de Lavras",
                      "Uni. Federal de Viçosa", 
-                     "Uni. Federal de São João Del-Rei",
+                     "Uni. Federal de São João del-Rei",
                      "Uni. Federal de Jataí",
                      "Empresa Brasileira de Pesquisa Agropecuária",
                      "Uni. de Brasília",
@@ -332,7 +342,9 @@ variable_levels <- c("AC", "AP", "AM", "PA", "RO", "RR", "TO",
                      "Inst. Federal — Pernambuco",
                      "Inst. Federal — do Sul de Minas",
                      "Uni. Federal de Pernambuco",
+                     "Uni. Federal Rural de Pernambuco",
                      "Uni. Estadual da Paraíba",
+                     "Secretaria Municipal de Educação — Paraíba",
                      "Uni. Federal da Paraíba",
                      "Secretaria Municipal de Educação",
                      "Uni. Federal do Rio Grande do Norte",
