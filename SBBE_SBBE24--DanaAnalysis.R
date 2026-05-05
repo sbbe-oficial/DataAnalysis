@@ -118,7 +118,6 @@ fulldfUltra$State <- ifelse(fulldfUltra$Name %in% c("Alex Anderson Antony Bandei
                                                     "Gabriele Tomaz Vieira",
                                                     "George Pacheco",
                                                     "Gustavo Henrique Lopes",
-                                                    "Ingrid Lavínia Malosti Vieira",
                                                     "Lucas Rafael Cabral Jara",
                                                     "Luiza Teixeira da Silva",
                                                     "Maria Clara Andrade dos Santos",
@@ -126,8 +125,7 @@ fulldfUltra$State <- ifelse(fulldfUltra$Name %in% c("Alex Anderson Antony Bandei
                                                     "Rafael Sartori Lam",
                                                     "Ramon Trindade Urbano",
                                                     "rebeca Taborda Ribas Matos",
-                                                    "Sofia Demétrio Nicolau",
-                                                    "Vinícius Castro Burgo"), "Exterior", fulldfUltra$State)
+                                                    "Sofia Demétrio Nicolau"), "Exterior", fulldfUltra$State)
 
 
 # Corrects State ~
@@ -504,8 +502,8 @@ fulldfPlots$Stats <- factor(fulldfPlots$Stats, ordered = T,
 
 
 # Load geom data ~
-BRL_Regions <- read_region(simplified = TRUE, year = 2020)
-BRL_States <- read_state(code_state = "all", simplified = TRUE, year = 2020)
+BRL_Regions <- read_region(simplified = TRUE, year = 2019)
+BRL_States <- read_state(code_state = "all", simplified = TRUE, year = 2019)
 
 
 # Corrects entries ~
@@ -900,7 +898,7 @@ Map_Members <-
               starstroke = .3, colour = "#f7fbff") +
     labs(title = "% de Membros da SBBE por Região & Estado",
          subtitle = "% of SBBE Members per Region & State") +
-    scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+    scale_fill_continuous(low = "#ece7f2", high = "#023858",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
                           limits = c(0, 60)) +
@@ -959,7 +957,7 @@ Map_Attendees <-
               size = 20, family = "Cormorant", fontface = "bold", colour = "#365338") +
     labs(title = "% de Participantes do SBBE24 por Região & Estado",
          subtitle = "% of SBBE24 Attendees per Region & State") +
-    scale_fill_continuous(low = "#d6d6d6", high = "#004529",
+    scale_fill_continuous(low = "#ece7f2", high = "#023858",
                           breaks = c(10, 20, 30, 40, 50),
                           labels = c("10%", "20%", "30%", "40%", "50%"),
                           limits = c(0, 60)) +
